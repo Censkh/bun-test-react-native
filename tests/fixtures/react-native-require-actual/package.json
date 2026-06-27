@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@react-native/jest-preset": "0.85.3",
+    "react-native": "0.85.3"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@shopify/flash-list": "2.3.2",
+    "@testing-library/react-native": "14.0.0-alpha.1",
+    "react": "19.2.3",
+    "react-native": "0.85.3"
+  }
+}

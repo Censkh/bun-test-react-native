@@ -1,0 +1,3 @@
+[test]
+preload = ["./tests/blockPluginInstall.ts"]
+pathIgnorePatterns = ["tests/fixtures/**"]

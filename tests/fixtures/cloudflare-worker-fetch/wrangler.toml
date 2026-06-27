@@ -1,0 +1,27 @@
+name = "cloudflare-worker-fetch-fixture"
+main = "src/worker.ts"
+compatibility_date = "2025-08-15"
+compatibility_flags = ["nodejs_compat"]
+
+[images]
+binding = "IMAGES"
+
+[[r2_buckets]]
+binding = "IMAGES_BUCKET"
+bucket_name = "images"
+
+[[durable_objects.bindings]]
+name = "APP_EVENTS"
+class_name = "AppEvents"
+
+[[durable_objects.bindings]]
+name = "IMAGES_PROBE"
+class_name = "ImagesProbe"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["AppEvents"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["ImagesProbe"]

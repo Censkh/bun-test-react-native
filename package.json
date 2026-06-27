@@ -1,0 +1,42 @@
+{
+  "name": "bun-test-react-native",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Run React Native and Expo tests in Bun",
+  "sideEffects": false,
+  "scripts": {
+    "test": "bun test --parallel=3",
+    "check": "tsc --noEmit --project tsconfig.json && npx @biomejs/biome check .",
+    "check:fix": "tsc --noEmit --project tsconfig.json && npx @biomejs/biome check --write ."
+  },
+  "exports": {
+    "./plugin": {
+      "types": "./src/plugin-entry.ts",
+      "default": "./src/plugin-entry.ts"
+    },
+    "./setup": {
+      "types": "./src/setup.ts",
+      "default": "./src/setup.ts"
+    }
+  },
+  "files": [
+    "src/"
+  ],
+  "author": "James Waterhouse <09jwater@gmail.com>",
+  "license": "MIT",
+  "repository": "https://github.com/Censkh/bun-test-react-native",
+  "dependencies": {
+    "@react-native/jest-preset": "0.85.3",
+    "bun-jest-require-actual": "workspace:*",
+    "jest-expo": "~56.0.5",
+    "undici": "^7.24.8"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.15.43",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^26.0.0",
+    "expo-modules-core": "^56.0.16",
+    "react-native": "0.85.3",
+    "typescript": "7.0.1-rc"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "dependencies": {
+        "react-native-platform-fixture": "file:./react-native-platform-fixture",
+      },
+    },
+  },
+  "packages": {
+    "react-native-platform-fixture": ["react-native-platform-fixture@file:react-native-platform-fixture", {}],
+  }
+}

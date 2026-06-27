@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "dependencies": {
+    "expo": "~56.0.12",
+    "expo-modules-core": "^56.0.16",
+    "react": "19.2.3",
+    "react-native": "0.85.3"
+  }
+}

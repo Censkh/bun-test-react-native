@@ -1,0 +1,14 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@expo/ui": "56.0.18",
+    "@testing-library/react-native": "^14.0.0",
+    "expo": "~56.0.12",
+    "expo-file-system": "~56.0.8",
+    "expo-modules-core": "^56.0.16",
+    "react": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-reanimated": "4.4.1",
+    "react-native-worklets": "0.9.2"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@react-native-clipboard/clipboard": "1.16.3",
+    "react": "19.2.3",
+    "react-native": "0.85.3"
+  }
+}

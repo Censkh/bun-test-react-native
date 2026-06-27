@@ -1,0 +1,12 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@shopify/react-native-skia": "2.6.5",
+    "react": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-reanimated": "4.4.1"
+  },
+  "trustedDependencies": [
+    "@shopify/react-native-skia"
+  ]
+}

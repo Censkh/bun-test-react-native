@@ -1,0 +1,12 @@
+name = "cloudflare-worker-fetch-fixture"
+main = "src/worker.ts"
+compatibility_date = "2025-08-15"
+compatibility_flags = ["nodejs_compat"]
+
+[[durable_objects.bindings]]
+name = "APP_EVENTS"
+class_name = "AppEvents"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["AppEvents"]

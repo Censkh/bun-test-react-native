@@ -1,0 +1,7 @@
+{
+  "name": "react-native-platform-fixture",
+  "version": "0.0.0",
+  "main": "index.js",
+  "type": "commonjs",
+  "private": true
+}

@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "dependencies": {
+    "react-native-platform-fixture": "file:./react-native-platform-fixture"
+  }
+}
