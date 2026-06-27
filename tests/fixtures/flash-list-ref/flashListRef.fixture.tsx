@@ -20,14 +20,7 @@ describe("@shopify/flash-list imperative ref compatibility", () => {
         ref.current?.scrollToOffset({ animated: false, offset: 0 });
       }, []);
 
-      return (
-        <WrappedFlashList
-          data={["one"]}
-          keyExtractor={(item) => item}
-          ref={ref}
-          renderItem={renderItem}
-        />
-      );
+      return <WrappedFlashList data={["one"]} keyExtractor={(item) => item} ref={ref} renderItem={renderItem} />;
     };
 
     render(<Probe />);

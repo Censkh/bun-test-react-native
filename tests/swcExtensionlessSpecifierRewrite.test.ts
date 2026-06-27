@@ -72,11 +72,10 @@ describe("SWC extensionless platform specifier rewrite", () => {
   test("leaves unresolved extensionless specifiers alone", () => {
     const root = createTestRoot();
     const importer = writeFile(root, "src/example.ts");
-    const output = rewriteExtensionlessSpecifiersWithSwc(
-      'import value from "./missing";',
-      importer,
-      { platform: "ios", projectRoot: root },
-    );
+    const output = rewriteExtensionlessSpecifiersWithSwc('import value from "./missing";', importer, {
+      platform: "ios",
+      projectRoot: root,
+    });
 
     expect(output).toContain('from "./missing"');
   });

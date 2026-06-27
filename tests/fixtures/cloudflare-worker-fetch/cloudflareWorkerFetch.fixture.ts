@@ -80,9 +80,7 @@ describe("Cloudflare worker fetch", () => {
       const response = await worker.fetch("https://example.com/cloudflare-worker-fetch");
 
       expect(response.status).toBe(200);
-      expect(await Promise.race([response.text(), timeout("response body timed out")])).toBe(
-        "cloudflare-ok",
-      );
+      expect(await Promise.race([response.text(), timeout("response body timed out")])).toBe("cloudflare-ok");
     } finally {
       await server.close();
     }

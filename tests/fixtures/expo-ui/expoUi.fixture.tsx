@@ -46,10 +46,7 @@ type JsonNode =
   | string
   | null;
 
-const findJsonNodeByType = (
-  node: JsonNode | JsonNode[],
-  type: string,
-): Exclude<JsonNode, string | null> | null => {
+const findJsonNodeByType = (node: JsonNode | JsonNode[], type: string): Exclude<JsonNode, string | null> | null => {
   if (Array.isArray(node)) {
     for (const child of node) {
       const match = findJsonNodeByType(child, type);
@@ -63,8 +60,7 @@ const findJsonNodeByType = (
 };
 
 const findImageJsonNode = (node: JsonNode | JsonNode[]) =>
-  findJsonNodeByType(node, "ImageView") ??
-  findJsonNodeByType(node, "ViewManagerAdapter_ExpoUI_ImageView");
+  findJsonNodeByType(node, "ImageView") ?? findJsonNodeByType(node, "ViewManagerAdapter_ExpoUI_ImageView");
 
 describe("@expo/ui native module mocks", () => {
   test("exposes text rendered inside SwiftUI native view mocks to queries", async () => {
@@ -72,10 +68,7 @@ describe("@expo/ui native module mocks", () => {
       <>
         <Swift.Button label="Swift button label" onPress={noop} />
         <Swift.Text>Swift text child</Swift.Text>
-        <Swift.ContentUnavailableView
-          title="Swift empty title"
-          description="Swift empty description"
-        />
+        <Swift.ContentUnavailableView title="Swift empty title" description="Swift empty description" />
       </>,
     );
 
@@ -103,10 +96,7 @@ describe("@expo/ui native module mocks", () => {
     const result = await render(
       <Swift.Image
         color="#123456"
-        modifiers={[
-          SwiftModifiers.aspectRatio({ ratio: 1 }),
-          SwiftModifiers.frame({ height: 20, width: 20 }),
-        ]}
+        modifiers={[SwiftModifiers.aspectRatio({ ratio: 1 }), SwiftModifiers.frame({ height: 20, width: 20 })]}
         size={22}
         systemName="square.and.arrow.up"
       />,
@@ -115,9 +105,7 @@ describe("@expo/ui native module mocks", () => {
     const image = findImageJsonNode(result.toJSON());
     expect(image).toBeDefined();
     expect(image?.props?.systemName).toBe("square.and.arrow.up");
-    expect(image?.props?.modifiers).toContainEqual(
-      expect.objectContaining({ $type: "font", size: 22 }),
-    );
+    expect(image?.props?.modifiers).toContainEqual(expect.objectContaining({ $type: "font", size: 22 }));
     expect(image?.props?.modifiers).toContainEqual(
       expect.objectContaining({
         $type: "foregroundStyle",
@@ -219,16 +207,10 @@ describe("@expo/ui native module mocks", () => {
         <Compose.HorizontalDivider />
         <Compose.DropdownMenu expanded>{composeChild("Menu")}</Compose.DropdownMenu>
         <Compose.ElevatedButton onClick={noop}>{composeChild("Elevated")}</Compose.ElevatedButton>
-        <Compose.FilledTonalButton onClick={noop}>
-          {composeChild("Tonal")}
-        </Compose.FilledTonalButton>
-        <Compose.FloatingActionButton onClick={noop}>
-          {composeChild("Fab")}
-        </Compose.FloatingActionButton>
+        <Compose.FilledTonalButton onClick={noop}>{composeChild("Tonal")}</Compose.FilledTonalButton>
+        <Compose.FloatingActionButton onClick={noop}>{composeChild("Fab")}</Compose.FloatingActionButton>
         <Compose.FlowRow>{composeChild("Flow")}</Compose.FlowRow>
-        <Compose.HorizontalFloatingToolbar>
-          {composeChild("Toolbar")}
-        </Compose.HorizontalFloatingToolbar>
+        <Compose.HorizontalFloatingToolbar>{composeChild("Toolbar")}</Compose.HorizontalFloatingToolbar>
         <Compose.Icon name="star" />
         <Compose.IconButton onClick={noop}>{composeChild("Icon button")}</Compose.IconButton>
         <Compose.LazyColumn>{composeChild("Lazy column")}</Compose.LazyColumn>
@@ -242,12 +224,8 @@ describe("@expo/ui native module mocks", () => {
         <Compose.OutlinedTextField value="Outlined" onValueChange={noop} />
         <Compose.RadioButton selected onClick={noop} />
         <Compose.Row>{composeChild("Row")}</Compose.Row>
-        <Compose.SearchBar inputField={composeChild("Search")}>
-          {composeChild("Results")}
-        </Compose.SearchBar>
-        <Compose.SingleChoiceSegmentedButtonRow>
-          {composeChild("Segment")}
-        </Compose.SingleChoiceSegmentedButtonRow>
+        <Compose.SearchBar inputField={composeChild("Search")}>{composeChild("Results")}</Compose.SearchBar>
+        <Compose.SingleChoiceSegmentedButtonRow>{composeChild("Segment")}</Compose.SingleChoiceSegmentedButtonRow>
         <Compose.Slider value={0.5} onValueChange={noop} />
         <Compose.Snackbar>{composeChild("Snackbar")}</Compose.Snackbar>
         <Compose.Spacer />
@@ -259,9 +237,7 @@ describe("@expo/ui native module mocks", () => {
           {composeChild("Toggle")}
         </Compose.ToggleButton>
         <Compose.TooltipBox>
-          <Compose.TooltipBox.PlainTooltip>
-            {composeChild("Tooltip")}
-          </Compose.TooltipBox.PlainTooltip>
+          <Compose.TooltipBox.PlainTooltip>{composeChild("Tooltip")}</Compose.TooltipBox.PlainTooltip>
           {composeChild("Anchor")}
         </Compose.TooltipBox>
       </>,

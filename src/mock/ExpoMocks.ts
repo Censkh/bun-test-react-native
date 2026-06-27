@@ -9,10 +9,7 @@ import {
   installExpoFileSystemModuleMocks,
 } from "./ExpoFileSystemMocks";
 import { getImageLoaderNativeModule } from "./ExpoImageMocks";
-import {
-  getExpoMediaLibraryNativeModule,
-  getExpoMediaLibraryNextNativeModule,
-} from "./ExpoMediaLibraryMocks";
+import { getExpoMediaLibraryNativeModule, getExpoMediaLibraryNextNativeModule } from "./ExpoMediaLibraryMocks";
 import { createExpoUIViewMock, getExpoUINativeModule } from "./ExpoUIMocks";
 import { reactNativeNativeModules } from "./ReactNativeMocks";
 
@@ -89,20 +86,14 @@ Object.defineProperty(mockNativeModules, "ExpoMediaLibrary", {
   get: () => getExpoMediaLibraryNativeModule(),
 });
 
-
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-const mergeExpoModuleDefinitions = (
-  target: Record<string, unknown>,
-  source: Record<string, unknown>,
-) => {
+const mergeExpoModuleDefinitions = (target: Record<string, unknown>, source: Record<string, unknown>) => {
   for (const [key, value] of Object.entries(source)) {
     const existing = target[key];
     target[key] =
-      isPlainObject(existing) && isPlainObject(value)
-        ? mergeExpoModuleDefinitions({ ...existing }, value)
-        : value;
+      isPlainObject(existing) && isPlainObject(value) ? mergeExpoModuleDefinitions({ ...existing }, value) : value;
   }
   return target;
 };
@@ -136,9 +127,7 @@ const mockProperties = (moduleProperties, customMocks = {}) => {
   for (const propertyName of Object.keys(moduleProperties)) {
     const property = moduleProperties[propertyName];
     const customMock =
-      customMocks && Object.hasOwn(customMocks, propertyName)
-        ? customMocks[propertyName]
-        : property.mock;
+      customMocks && Object.hasOwn(customMocks, propertyName) ? customMocks[propertyName] : property.mock;
     mockedProperties[propertyName] = mockProperty(property, customMock);
   }
   return mockedProperties;
@@ -169,28 +158,20 @@ Object.defineProperty(mockNativeModules, "NativeUnimoduleProxy", {
   get: () => getExpoModuleMock("NativeUnimoduleProxy"),
 });
 
-Object.keys(mockNativeModules.NativeUnimoduleProxy?.viewManagersMetadata ?? {}).forEach(
-  (viewManagerName) => {
-    Object.defineProperty(mockNativeModules.UIManager, `ViewManagerAdapter_${viewManagerName}`, {
-      get: () => ({
-        NativeProps: {},
-        directEventTypes: [],
-      }),
-    });
-  },
-);
+Object.keys(mockNativeModules.NativeUnimoduleProxy?.viewManagersMetadata ?? {}).forEach((viewManagerName) => {
+  Object.defineProperty(mockNativeModules.UIManager, `ViewManagerAdapter_${viewManagerName}`, {
+    get: () => ({
+      NativeProps: {},
+      directEventTypes: [],
+    }),
+  });
+});
 
 mock.module("expo/src/async-require/messageSocket", () => ({}));
 mock.module("expo/src/async-require/messageSocket.native", () => ({}));
 mock.module("expo/src/async-require/setupHMR", () => {
   try {
-    require("expo/src/async-require/hmr").default.setup(
-      "ios",
-      "index.bundle",
-      "localhost",
-      8081,
-      true,
-    );
+    require("expo/src/async-require/hmr").default.setup("ios", "index.bundle", "localhost", 8081, true);
   } catch (error) {
     if (!(error instanceof Error) || !error.message.includes("Cannot initialize hmrClient twice")) {
       throw error;
@@ -289,10 +270,8 @@ const attemptLookup = (moduleName) => {
 
 mock.module("expo-modules-core", () => {
   const ExpoModulesCore = getActualExpoModulesCore();
-  const actualRequireOptionalNativeModule =
-    ExpoModulesCore.requireOptionalNativeModule?.bind(ExpoModulesCore);
-  const actualRequireNativeViewManager =
-    ExpoModulesCore.requireNativeViewManager?.bind(ExpoModulesCore);
+  const actualRequireOptionalNativeModule = ExpoModulesCore.requireOptionalNativeModule?.bind(ExpoModulesCore);
+  const actualRequireNativeViewManager = ExpoModulesCore.requireNativeViewManager?.bind(ExpoModulesCore);
   const {
     EventEmitter = class EventEmitter {},
     NativeModule = class NativeModule {},
@@ -391,10 +370,7 @@ mock.module("expo-modules-core", () => {
           return createExpoUIViewMock(viewName ?? name);
         }
         try {
-          return (
-            actualRequireNativeViewManager?.(name, viewName) ??
-            createNativeViewMock(viewName ?? name)
-          );
+          return actualRequireNativeViewManager?.(name, viewName) ?? createNativeViewMock(viewName ?? name);
         } catch {
           return createNativeViewMock(viewName ?? name);
         }

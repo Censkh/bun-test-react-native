@@ -54,12 +54,10 @@ describe("React Native transform decision", () => {
     writeFile(root, "node_modules/react-native-screens/lib/module/Thing.ios.js");
 
     expect(
-      getReactNativeTransformations(
-        'import Thing from "./Thing";\nexport default Thing;',
-        importer,
-        undefined,
-        { platform: "ios", projectRoot: root },
-      ),
+      getReactNativeTransformations('import Thing from "./Thing";\nexport default Thing;', importer, undefined, {
+        platform: "ios",
+        projectRoot: root,
+      }),
     ).toEqual(["rewrite-extensionless-specifiers"]);
   });
 
@@ -69,12 +67,10 @@ describe("React Native transform decision", () => {
     writeFile(root, "node_modules/react-native-reanimated/src/Thing.ts");
 
     expect(
-      getReactNativeTransformations(
-        'import Thing from "./Thing";\nexport default Thing;',
-        importer,
-        undefined,
-        { platform: "ios", projectRoot: root },
-      ),
+      getReactNativeTransformations('import Thing from "./Thing";\nexport default Thing;', importer, undefined, {
+        platform: "ios",
+        projectRoot: root,
+      }),
     ).toEqual(["typescript"]);
   });
 

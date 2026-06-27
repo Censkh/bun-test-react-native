@@ -30,8 +30,7 @@ export const swcBackend: TranspileBackend = {
                 jsx: true,
                 syntax: "flow",
               },
-          ...(options.transforms.includes("flow") ||
-          (isTypeScript && options.filename.endsWith(".tsx"))
+          ...(options.transforms.includes("flow") || (isTypeScript && options.filename.endsWith(".tsx"))
             ? {
                 transform: {
                   react: {
@@ -56,11 +55,7 @@ export const swcBackend: TranspileBackend = {
     }
 
     if (options.transforms.includes("rewrite-extensionless-specifiers")) {
-      output = rewriteExtensionlessSpecifiersWithSwc(
-        output,
-        options.filename,
-        options.resolverOptions,
-      );
+      output = rewriteExtensionlessSpecifiersWithSwc(output, options.filename, options.resolverOptions);
     }
 
     return output;

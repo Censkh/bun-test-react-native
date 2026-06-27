@@ -30,8 +30,7 @@ export {
   transpile,
 } from "./transpile";
 
-const REACT_NATIVE_ASSET_FILE_PATTERN =
-  /\.(?:bmp|gif|jpg|jpeg|m4a|mp3|mp4|otf|png|psd|svg|ttf|webm|webp|wav)$/i;
+const REACT_NATIVE_ASSET_FILE_PATTERN = /\.(?:bmp|gif|jpg|jpeg|m4a|mp3|mp4|otf|png|psd|svg|ttf|webm|webp|wav)$/i;
 const NORMAL_SOURCE_FILE_PATTERN =
   /^(?!.*[/\\]node_modules[/\\](?!@expo[/\\]|@react-native[/\\]|expo(?:[/\\]|-|$)|react-native(?!-gesture-handler(?:[/\\]|$))(?:[/\\]|-|$))).*\.[cm]?[jt]sx?$/;
 const NODE_MODULES_SEGMENT = `${path.sep}node_modules${path.sep}`;
@@ -53,9 +52,7 @@ type NodeModulesPackageBase = {
 const debug = (...args: unknown[]) => {
   if (!process.env.BTRN_DEBUG) return;
   const filter = process.env.BTRN_DEBUG_FILTER;
-  const message = args
-    .map((arg) => (typeof arg === "string" ? arg : JSON.stringify(arg)))
-    .join(" ");
+  const message = args.map((arg) => (typeof arg === "string" ? arg : JSON.stringify(arg))).join(" ");
   if (filter && !message.includes(filter)) return;
   console.error("[btrn:plugin]", ...args);
 };
@@ -67,11 +64,7 @@ type ResolveDebugArgs = {
   path: string;
 };
 
-const debugOnResolve = (
-  event: string,
-  args: ResolveDebugArgs,
-  details: Record<string, unknown> = {},
-) => {
+const debugOnResolve = (event: string, args: ResolveDebugArgs, details: Record<string, unknown> = {}) => {
   debug(`onResolve:${event}`, {
     importer: args.importer,
     kind: args.kind,
@@ -81,33 +74,22 @@ const debugOnResolve = (
   });
 };
 
-const normalizePluginImporter = (importer: string) =>
-  importer.replace(/^\/actual:/, "").replace(/^actual:/, "");
+const normalizePluginImporter = (importer: string) => importer.replace(/^\/actual:/, "").replace(/^actual:/, "");
 
 const getSpecifierPathname = (specifier: string) => specifier.split(/[?#]/, 1)[0] ?? specifier;
 
-const hasExplicitExtension = (specifier: string) =>
-  path.extname(getSpecifierPathname(specifier)) !== "";
+const hasExplicitExtension = (specifier: string) => path.extname(getSpecifierPathname(specifier)) !== "";
 
-const isNativeAddonSpecifier = (specifier: string) =>
-  path.extname(getSpecifierPathname(specifier)) === ".node";
+const isNativeAddonSpecifier = (specifier: string) => path.extname(getSpecifierPathname(specifier)) === ".node";
 
-const isRelativeSpecifier = (specifier: string) =>
-  specifier.startsWith("./") || specifier.startsWith("../");
+const isRelativeSpecifier = (specifier: string) => specifier.startsWith("./") || specifier.startsWith("../");
 
-const isExactRelativeResolution = (
-  specifier: string,
-  importer: string | undefined,
-  resolvedPath: string,
-) => {
+const isExactRelativeResolution = (specifier: string, importer: string | undefined, resolvedPath: string) => {
   if (!importer || !isRelativeSpecifier(specifier) || !hasExplicitExtension(specifier)) {
     return false;
   }
 
-  return (
-    path.resolve(path.dirname(toFilePath(importer)), getSpecifierPathname(specifier)) ===
-    toFilePath(resolvedPath)
-  );
+  return path.resolve(path.dirname(toFilePath(importer)), getSpecifierPathname(specifier)) === toFilePath(resolvedPath);
 };
 
 const isExactPackageSubpathResolution = (specifier: string, resolvedPath: string) => {
@@ -144,15 +126,10 @@ const getNodeModulesPackage = (filePath: string) => {
   const markerIndex = normalizedPath.lastIndexOf(NODE_MODULES_SEGMENT);
   if (markerIndex === -1) return null;
 
-  const nodeModulesDirectory = normalizedPath.slice(
-    0,
-    markerIndex + NODE_MODULES_SEGMENT.length - 1,
-  );
+  const nodeModulesDirectory = normalizedPath.slice(0, markerIndex + NODE_MODULES_SEGMENT.length - 1);
   const packagePath = normalizedPath.slice(markerIndex + NODE_MODULES_SEGMENT.length);
   const packageParts = packagePath.split(path.sep);
-  const packageName = packageParts[0]?.startsWith("@")
-    ? packageParts.slice(0, 2).join("/")
-    : packageParts[0];
+  const packageName = packageParts[0]?.startsWith("@") ? packageParts.slice(0, 2).join("/") : packageParts[0];
   if (!packageName) return null;
 
   const packageDirectory = path.join(nodeModulesDirectory, packageName);
@@ -371,9 +348,7 @@ export const reactNativePlatformResolverPlugin: BunPlugin = {
       const contents =
         commonJsWrapper ??
         rewriteRelativeSpecifiersToFileUrls(
-          transformations.length > 0
-            ? transpile({ source, filePath, options, transforms: transformations })
-            : source,
+          transformations.length > 0 ? transpile({ source, filePath, options, transforms: transformations }) : source,
           filePath,
           options,
         );

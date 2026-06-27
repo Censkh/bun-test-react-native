@@ -22,30 +22,20 @@ describe("React Native module transpile", () => {
     `,
     });
 
-    expect(output).toMatch(
-      /export\s*\{\s*addCustomSourceTransformer(?:\s+as\s+addCustomSourceTransformer)?\s*\}/,
-    );
+    expect(output).toMatch(/export\s*\{\s*addCustomSourceTransformer(?:\s+as\s+addCustomSourceTransformer)?\s*\}/);
     expect(output).toMatch(/export\s*\{\s*pickScale(?:\s+as\s+pickScale)?\s*\}/);
-    expect(output).toMatch(
-      /export\s*\{\s*setCustomSourceTransformer(?:\s+as\s+setCustomSourceTransformer)?\s*\}/,
-    );
+    expect(output).toMatch(/export\s*\{\s*setCustomSourceTransformer(?:\s+as\s+setCustomSourceTransformer)?\s*\}/);
     expect(output).toContain("export default resolveAssetSource");
   });
 
   test("transpiles react-native resolveAssetSource default properties to named exports", () => {
-    const resolveAssetSourcePath = require.resolve(
-      "react-native/Libraries/Image/resolveAssetSource.js",
-    );
+    const resolveAssetSourcePath = require.resolve("react-native/Libraries/Image/resolveAssetSource.js");
     const source = fs.readFileSync(resolveAssetSourcePath, "utf8");
     const output = transpile({ source, filePath: resolveAssetSourcePath });
 
-    expect(output).toMatch(
-      /export\s*\{\s*addCustomSourceTransformer(?:\s+as\s+addCustomSourceTransformer)?\s*\}/,
-    );
+    expect(output).toMatch(/export\s*\{\s*addCustomSourceTransformer(?:\s+as\s+addCustomSourceTransformer)?\s*\}/);
     expect(output).toMatch(/export\s*\{\s*pickScale(?:\s+as\s+pickScale)?\s*\}/);
-    expect(output).toMatch(
-      /export\s*\{\s*setCustomSourceTransformer(?:\s+as\s+setCustomSourceTransformer)?\s*\}/,
-    );
+    expect(output).toMatch(/export\s*\{\s*setCustomSourceTransformer(?:\s+as\s+setCustomSourceTransformer)?\s*\}/);
     expect(output).toContain("export default resolveAssetSource");
     expect(output).not.toContain("@flow");
   });
@@ -70,9 +60,7 @@ describe("React Native module transpile", () => {
   });
 
   test("does not export react-native StatusBar method locals", () => {
-    const statusBarPath = require.resolve(
-      "react-native/Libraries/Components/StatusBar/StatusBar.js",
-    );
+    const statusBarPath = require.resolve("react-native/Libraries/Components/StatusBar/StatusBar.js");
     const source = fs.readFileSync(statusBarPath, "utf8");
     const output = transpile({ source, filePath: statusBarPath });
 

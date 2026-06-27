@@ -9,7 +9,7 @@ import { useBrandColors } from "src/lib/hooks/ThemeHooks";
 export default function TabLayout() {
   const router = useRouter();
   const segments = useSegments();
-  const { empty: noProjects, isLoading } = usePaginatedProjectList({});
+  const { empty: noProjects } = usePaginatedProjectList({});
   const brandColors = Object.values(useBrandColors());
 
   useEffect(() => {
@@ -18,15 +18,11 @@ export default function TabLayout() {
     if (lastSegment === "index") {
       router.replace("/(tabs)/create");
     }
-  }, [segments, router, isLoading, noProjects]);
+  }, [segments, router, noProjects]);
 
   return (
     <View className="flex-1">
-      <NativeTabs
-        backgroundColor="rgba(0,0,0,0.5)"
-        rippleColor="rgba(255,255,255,0.2)"
-        tintColor={brandColors[0]}
-      >
+      <NativeTabs backgroundColor="rgba(0,0,0,0.5)" rippleColor="rgba(255,255,255,0.2)" tintColor={brandColors[0]}>
         <NativeTabs.Trigger name="index" hidden={noProjects}>
           <NativeTabs.Trigger.Icon
             sf={resolveIconData("gallery-tab").sfSymbol}
@@ -34,9 +30,7 @@ export default function TabLayout() {
             selectedColor={brandColors[0]}
             src={Platform.OS === "web" ? <Icon name="gallery-tab" /> : undefined}
           />
-          <NativeTabs.Trigger.Label selectedStyle={{ color: brandColors[0] }}>
-            Gallery
-          </NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Label selectedStyle={{ color: brandColors[0] }}>Gallery</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="create">
           <NativeTabs.Trigger.Icon
@@ -45,9 +39,7 @@ export default function TabLayout() {
             selectedColor={brandColors[1]}
             src={Platform.OS === "web" ? <Icon name="create-tab" /> : undefined}
           />
-          <NativeTabs.Trigger.Label selectedStyle={{ color: brandColors[1] }}>
-            Create
-          </NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Label selectedStyle={{ color: brandColors[1] }}>Create</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
       </NativeTabs>
     </View>

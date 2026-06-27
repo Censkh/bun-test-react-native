@@ -1,9 +1,5 @@
 import { useState } from "react";
-import {
-  Pressable as BasePressable,
-  type PressableProps as BasePressableProps,
-  Platform,
-} from "react-native";
+import { Pressable as BasePressable, type PressableProps as BasePressableProps, Platform } from "react-native";
 import { Pressable as GesturePressable } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { withUniwind } from "uniwind";
@@ -16,16 +12,7 @@ export interface PressableProps extends BasePressableProps {
 const StyledGesturePressable = withUniwind(GesturePressable);
 
 const Pressable = (props: PressableProps) => {
-  const {
-    children,
-    onPressOut,
-    onPressIn,
-    className,
-    disabled,
-    style,
-    touchFeedback = true,
-    ...otherProps
-  } = props;
+  const { children, onPressOut, onPressIn, className, disabled, style, touchFeedback = true, ...otherProps } = props;
 
   const [pressed, setPressed] = useState(false);
   void StyledGesturePressable;

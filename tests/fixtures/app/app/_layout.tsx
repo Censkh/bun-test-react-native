@@ -52,14 +52,13 @@ function App() {
   useConnectivityMonitor();
   const { loaded, initialLoadError, retryInitialLoad } = useInitialLoad();
   const { session } = useAuthStore();
-  const [colorBackground, fontText, fontTextMedium, fontTextSemiBold, fontTextBold] =
-    useThemeVariable([
-      "colors.background",
-      "fonts.header",
-      "fonts.headerMedium",
-      "fonts.headerSemiBold",
-      "fonts.headerBold",
-    ]);
+  const [colorBackground, fontText, fontTextMedium, fontTextSemiBold, fontTextBold] = useThemeVariable([
+    "colors.background",
+    "fonts.header",
+    "fonts.headerMedium",
+    "fonts.headerSemiBold",
+    "fonts.headerBold",
+  ]);
 
   useEffect(() => {
     if (loaded) {
@@ -88,21 +87,13 @@ function App() {
       <ThemeProvider value={theme}>
         <GestureHandlerRootView className="flex-1">
           {initialLoadError ? (
-            <ErrorScreen
-              message={initialLoadError}
-              onRetry={retryInitialLoad}
-              retryLabel="Try Again"
-            >
+            <ErrorScreen message={initialLoadError} onRetry={retryInitialLoad} retryLabel="Try Again">
               <Logo />
             </ErrorScreen>
           ) : loaded ? (
             <>
               <Stack screenOptions={{}}>
-                <Stack.Screen
-                  name="(tabs)"
-                  options={{ headerShown: false }}
-                  redirect={!session?.idToken}
-                />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} redirect={!session?.idToken} />
                 <Stack.Screen
                   name="login"
                   options={{ gestureEnabled: false, headerShown: false }}

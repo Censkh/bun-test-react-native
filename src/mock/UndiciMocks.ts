@@ -12,9 +12,7 @@ class RequestCompat extends realUndici.Request {
     if (isRequestLike(input) && !(input instanceof realUndici.Request) && !(input instanceof URL)) {
       const source = input as Request;
       super(source.url, {
-        body:
-          init?.body ??
-          (source.method === "GET" || source.method === "HEAD" ? undefined : source.body),
+        body: init?.body ?? (source.method === "GET" || source.method === "HEAD" ? undefined : source.body),
         cache: init?.cache ?? source.cache,
         credentials: init?.credentials ?? source.credentials,
         duplex: "half",
@@ -45,9 +43,7 @@ const fetch = (async (input: RequestInfo | URL, init?: FetchInit) => {
   // stall under Bun while workerd has pending `ctx.waitUntil()` work. The lower
   // level `undici.request()` honours dispatchers and its Node stream completes,
   // so this wrapper buffers that stream back into an Undici `Response`.
-  const headers = new realUndici.Headers(
-    init?.headers ?? (isRequestLike(input) ? input.headers : undefined),
-  );
+  const headers = new realUndici.Headers(init?.headers ?? (isRequestLike(input) ? input.headers : undefined));
   if (!headers.has("accept-encoding")) {
     headers.set("accept-encoding", "identity");
   }

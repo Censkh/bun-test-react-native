@@ -17,8 +17,7 @@ const getQueryClientState = () => ({
     .getMutationCache()
     .getAll()
     .map((mutation) => ({
-      error:
-        mutation.state.error instanceof Error ? mutation.state.error.message : mutation.state.error,
+      error: mutation.state.error instanceof Error ? mutation.state.error.message : mutation.state.error,
       key: mutation.options.mutationKey,
       status: mutation.state.status,
     })),
@@ -43,10 +42,9 @@ export const waitForQueryIdle = async (label: string, timeoutMs = 10_000) => {
       { interval: 50, timeout: timeoutMs },
     );
   } catch (error) {
-    throw new Error(
-      `Timed out waiting for query idle: ${label}\n${JSON.stringify(getQueryClientState(), null, 2)}`,
-      { cause: error },
-    );
+    throw new Error(`Timed out waiting for query idle: ${label}\n${JSON.stringify(getQueryClientState(), null, 2)}`, {
+      cause: error,
+    });
   }
 };
 

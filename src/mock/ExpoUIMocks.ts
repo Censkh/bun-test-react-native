@@ -41,9 +41,7 @@ export const createExpoUIViewMock = (displayName: string) => {
       ...(Array.isArray(props.spans) ? props.spans.flatMap(textFromSpan) : []).map((value) =>
         React.createElement(Text, { key: value }, value),
       ),
-      ...reactNodePropNames
-        .map((propName) => props[propName])
-        .filter((value) => React.isValidElement(value)),
+      ...reactNodePropNames.map((propName) => props[propName]).filter((value) => React.isValidElement(value)),
     );
 
   Object.defineProperty(component, "displayName", {

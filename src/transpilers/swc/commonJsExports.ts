@@ -9,8 +9,7 @@ const isNode = (value: unknown): value is SwcNode =>
 
 const isValidExportName = (name: string) => /^[A-Za-z_$][\w$]*$/.test(name);
 
-const parseStatements = (source: string): SwcNode[] =>
-  (parseSync(source, { syntax: "ecmascript" }) as SwcNode).body;
+const parseStatements = (source: string): SwcNode[] => (parseSync(source, { syntax: "ecmascript" }) as SwcNode).body;
 
 const toIdentifierName = (name: string) => name.replace(/[^\w$]/g, "_");
 
@@ -31,11 +30,9 @@ const getUniqueName = (baseName: string, usedNames: Set<string>) => {
   return candidate;
 };
 
-const idName = (node: unknown) =>
-  isNode(node) && node.type === "Identifier" ? String(node.value) : null;
+const idName = (node: unknown) => (isNode(node) && node.type === "Identifier" ? String(node.value) : null);
 
-const stringValue = (node: unknown) =>
-  isNode(node) && node.type === "StringLiteral" ? String(node.value) : null;
+const stringValue = (node: unknown) => (isNode(node) && node.type === "StringLiteral" ? String(node.value) : null);
 
 const argExpression = (node: unknown) =>
   node != null && typeof node === "object" ? (node as Record<string, unknown>).expression : null;
@@ -69,8 +66,7 @@ const isModuleExportsObject = (node: unknown) =>
   idName(node.property) === "exports";
 
 const isExportsObject = (node: unknown) =>
-  (isNode(node) && node.type === "Identifier" && node.value === "exports") ||
-  isModuleExportsObject(node);
+  (isNode(node) && node.type === "Identifier" && node.value === "exports") || isModuleExportsObject(node);
 
 const getRequireSpecifier = (node: unknown) => {
   if (!isNode(node) || node.type !== "CallExpression") return null;
@@ -114,9 +110,7 @@ const isObjectAssignCall = (node: SwcNode) =>
 
 const hasObjectProperty = (objectExpression: SwcNode, propertyName: string) =>
   Array.isArray(objectExpression.properties) &&
-  objectExpression.properties.some(
-    (property: SwcNode) => objectPropertyName(property) === propertyName,
-  );
+  objectExpression.properties.some((property: SwcNode) => objectPropertyName(property) === propertyName);
 
 const getObjectKeysForEachBinding = (node: SwcNode) => {
   if (
@@ -275,11 +269,7 @@ const walk = (
   }
 };
 
-const collectStaticExportNames = (
-  source: string,
-  filename: string | undefined,
-  seenFiles = new Set<string>(),
-) => {
+const collectStaticExportNames = (source: string, filename: string | undefined, seenFiles = new Set<string>()) => {
   const exportNames = new Set<string>();
   let ast: SwcNode;
 
@@ -473,12 +463,7 @@ export const applyCommonJsExportsWithSwc = (source: string, filename?: string) =
     if (node.init?.type === "ObjectExpression") {
       objectExportNames.set(
         name,
-        collectObjectExportNames(
-          node.init,
-          objectExportNames,
-          requireBindings,
-          exportAllSpecifiers,
-        ),
+        collectObjectExportNames(node.init, objectExportNames, requireBindings, exportAllSpecifiers),
       );
     }
   });
@@ -627,19 +612,13 @@ export const applyCommonJsExportsWithSwc = (source: string, filename?: string) =
     if (exportName === "default") hasExportsDefault = true;
     else {
       exportNames.add(exportName);
-      if (
-        isNode(descriptor) &&
-        descriptor.type === "ObjectExpression" &&
-        !hasObjectProperty(descriptor, "get")
-      ) {
+      if (isNode(descriptor) && descriptor.type === "ObjectExpression" && !hasObjectProperty(descriptor, "get")) {
         directExportNames.add(exportName);
       }
     }
   });
 
-  for (const [exportName, localName] of [...defaultPropertyExportNames].sort(([a], [b]) =>
-    a.localeCompare(b),
-  )) {
+  for (const [exportName, localName] of [...defaultPropertyExportNames].sort(([a], [b]) => a.localeCompare(b))) {
     ast.body.push(...parseStatements(`export { ${localName} as ${exportName} };`));
   }
 

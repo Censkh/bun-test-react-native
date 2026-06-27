@@ -34,10 +34,7 @@ describe("resolveReactNativeImport", () => {
     const iosButton = writeFile(root, "src/Button.ios.tsx");
 
     expect(
-      resolveReactNativeImport(
-        { importer, specifier: "./Button" },
-        { platform: "ios", projectRoot: root },
-      ),
+      resolveReactNativeImport({ importer, specifier: "./Button" }, { platform: "ios", projectRoot: root }),
     ).toEqual({ path: iosButton });
   });
 
@@ -48,10 +45,7 @@ describe("resolveReactNativeImport", () => {
     const iosButton = writeFile(root, "src/Button.ios.tsx");
 
     expect(
-      resolveReactNativeImport(
-        { importer, specifier: "./Button" },
-        { platform: "ios", projectRoot: root },
-      ),
+      resolveReactNativeImport({ importer, specifier: "./Button" }, { platform: "ios", projectRoot: root }),
     ).toEqual({ path: iosButton });
   });
 
@@ -61,10 +55,7 @@ describe("resolveReactNativeImport", () => {
     const button = writeFile(root, "src/Button.tsx");
 
     expect(
-      resolveReactNativeImport(
-        { importer, specifier: "./Button" },
-        { platform: "ios", projectRoot: root },
-      ),
+      resolveReactNativeImport({ importer, specifier: "./Button" }, { platform: "ios", projectRoot: root }),
     ).toEqual({ path: button });
   });
 
@@ -75,10 +66,7 @@ describe("resolveReactNativeImport", () => {
     const nativeButton = writeFile(root, "src/Button.native.tsx");
 
     expect(
-      resolveReactNativeImport(
-        { importer, specifier: "./Button" },
-        { platform: "android", projectRoot: root },
-      ),
+      resolveReactNativeImport({ importer, specifier: "./Button" }, { platform: "android", projectRoot: root }),
     ).toEqual({ path: nativeButton });
   });
 
@@ -86,36 +74,21 @@ describe("resolveReactNativeImport", () => {
     const root = createTestRoot();
     const importer = writeFile(root, "node_modules/expo/src/async-require/hmr.ts");
     writeFile(root, "node_modules/expo/src/async-require/hmrUtils.ts");
-    const nativeHmrUtils = writeFile(
-      root,
-      "node_modules/expo/src/async-require/hmrUtils.native.ts",
-    );
+    const nativeHmrUtils = writeFile(root, "node_modules/expo/src/async-require/hmrUtils.native.ts");
 
     expect(
-      resolveReactNativeImport(
-        { importer, specifier: "./hmrUtils" },
-        { platform: "ios", projectRoot: root },
-      ),
+      resolveReactNativeImport({ importer, specifier: "./hmrUtils" }, { platform: "ios", projectRoot: root }),
     ).toEqual({ path: nativeHmrUtils });
   });
 
   test("resolves platform files for third-party package relative imports", () => {
     const root = createTestRoot();
-    const importer = writeFile(
-      root,
-      "node_modules/react-native-screens/lib/commonjs/host/index.js",
-    );
-    const iosTabsHost = writeFile(
-      root,
-      "node_modules/react-native-screens/lib/commonjs/host/TabsHost.ios.js",
-    );
+    const importer = writeFile(root, "node_modules/react-native-screens/lib/commonjs/host/index.js");
+    const iosTabsHost = writeFile(root, "node_modules/react-native-screens/lib/commonjs/host/TabsHost.ios.js");
     writeFile(root, "node_modules/react-native-screens/lib/commonjs/host/TabsHost.android.js");
 
     expect(
-      resolveReactNativeImport(
-        { importer, specifier: "./TabsHost" },
-        { platform: "ios", projectRoot: root },
-      ),
+      resolveReactNativeImport({ importer, specifier: "./TabsHost" }, { platform: "ios", projectRoot: root }),
     ).toEqual({ path: iosTabsHost });
   });
 
@@ -126,10 +99,7 @@ describe("resolveReactNativeImport", () => {
       root,
       "node_modules/react-native-worklets/lib/module/WorkletsModule/NativeWorklets.js",
     );
-    writeFile(
-      root,
-      "node_modules/react-native-worklets/lib/module/WorkletsModule/NativeWorklets.native.js",
-    );
+    writeFile(root, "node_modules/react-native-worklets/lib/module/WorkletsModule/NativeWorklets.native.js");
 
     expect(
       resolveReactNativeImport(
@@ -147,10 +117,7 @@ describe("resolveReactNativeImport", () => {
     writeFile(root, "node_modules/example/index.js");
 
     expect(
-      resolveReactNativeImport(
-        { importer, specifier: "example" },
-        { platform: "ios", projectRoot: root },
-      ),
+      resolveReactNativeImport({ importer, specifier: "example" }, { platform: "ios", projectRoot: root }),
     ).toEqual({ path: iosEntry });
   });
 
@@ -169,10 +136,7 @@ describe("resolveReactNativeImport", () => {
     const nativeEntry = writeFile(root, "node_modules/example/native-entry.js");
 
     expect(
-      resolveReactNativeImport(
-        { importer, specifier: "example" },
-        { platform: "ios", projectRoot: root },
-      ),
+      resolveReactNativeImport({ importer, specifier: "example" }, { platform: "ios", projectRoot: root }),
     ).toEqual({ path: nativeEntry });
   });
 
@@ -193,10 +157,7 @@ describe("resolveReactNativeImport", () => {
     writeFile(root, "node_modules/example/server-only.js");
 
     expect(
-      resolveReactNativeImport(
-        { importer, specifier: "example/server-only" },
-        { platform: "ios", projectRoot: root },
-      ),
+      resolveReactNativeImport({ importer, specifier: "example/server-only" }, { platform: "ios", projectRoot: root }),
     ).toEqual({ path: nativeReplacement });
   });
 
@@ -215,10 +176,7 @@ describe("resolveReactNativeImport", () => {
     );
 
     expect(
-      resolveReactNativeImport(
-        { importer, specifier: "example/server-only" },
-        { platform: "ios", projectRoot: root },
-      ),
+      resolveReactNativeImport({ importer, specifier: "example/server-only" }, { platform: "ios", projectRoot: root }),
     ).toEqual({ path: "empty:" });
   });
 
@@ -244,9 +202,7 @@ describe("resolveReactNativeImport", () => {
       { platform: "ios", projectRoot: root },
     );
 
-    expect(result?.path).toEndWith(
-      fs.realpathSync(exportedEntry).replace(fs.realpathSync(root), ""),
-    );
+    expect(result?.path).toEndWith(fs.realpathSync(exportedEntry).replace(fs.realpathSync(root), ""));
   });
 
   test("does not resolve node builtins", () => {

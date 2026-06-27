@@ -2,10 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import {
-  hasExtensionlessPlatformSpecifier,
-  rewriteExtensionlessPlatformSpecifiers,
-} from "../src/plugin";
+import { hasExtensionlessPlatformSpecifier, rewriteExtensionlessPlatformSpecifiers } from "../src/plugin";
 
 const testRoots: string[] = [];
 
@@ -41,20 +38,13 @@ describe("extensionless platform specifier rewrite", () => {
 
   test("rewrites CommonJS require calls to platform files", () => {
     const root = createTestRoot();
-    const importer = writeFile(
-      root,
-      "node_modules/react-native-screens/lib/commonjs/components/tabs/host/index.js",
-    );
-    writeFile(
-      root,
-      "node_modules/react-native-screens/lib/commonjs/components/tabs/host/TabsHost.ios.js",
-    );
+    const importer = writeFile(root, "node_modules/react-native-screens/lib/commonjs/components/tabs/host/index.js");
+    writeFile(root, "node_modules/react-native-screens/lib/commonjs/components/tabs/host/TabsHost.ios.js");
 
-    const output = rewriteExtensionlessPlatformSpecifiers(
-      'const TabsHost = require("./TabsHost");',
-      importer,
-      { platform: "ios", projectRoot: root },
-    );
+    const output = rewriteExtensionlessPlatformSpecifiers('const TabsHost = require("./TabsHost");', importer, {
+      platform: "ios",
+      projectRoot: root,
+    });
 
     expect(output).toContain('require("./TabsHost.ios.js")');
   });

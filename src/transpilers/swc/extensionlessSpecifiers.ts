@@ -10,13 +10,7 @@ import type { SpecifierKind } from "../specifiers";
 import { isExtensionlessRelativeSpecifier } from "../specifiers";
 import { rewriteSpecifiersWithSwc } from "./rewriteSpecifiers";
 
-const REWRITABLE_KINDS = new Set<SpecifierKind>([
-  "dynamic-import",
-  "export-all",
-  "export-named",
-  "import",
-  "require",
-]);
+const REWRITABLE_KINDS = new Set<SpecifierKind>(["dynamic-import", "export-all", "export-named", "import", "require"]);
 
 const splitSpecifierSuffix = (specifier: string) => {
   const suffixIndex = specifier.search(/[?#]/);

@@ -39,9 +39,7 @@ describe("CommonJS dynamic export detection", () => {
   });
 
   test("does not treat react-native-gesture-handler literal getter exports as dynamic", () => {
-    const gestureHandlerIndexPath = require.resolve(
-      "react-native-gesture-handler/lib/commonjs/index.js",
-    );
+    const gestureHandlerIndexPath = require.resolve("react-native-gesture-handler/lib/commonjs/index.js");
     const source = fs.readFileSync(gestureHandlerIndexPath, "utf8");
 
     expect(source).toContain('Object.defineProperty(exports, "GestureHandlerRootView"');
@@ -97,9 +95,7 @@ describe("Reanimated Jest mock transpile", () => {
       source: 'module.exports = require("./build/testing-library");',
     });
 
-    expect(output).toContain(
-      'module.exports = __unwrapDefault(require("./build/testing-library"))',
-    );
+    expect(output).toContain('module.exports = __unwrapDefault(require("./build/testing-library"))');
     expect(output).toContain('export * from "./build/testing-library"');
     expect(output).toContain("export default module.exports");
   });
@@ -154,8 +150,6 @@ describe("Reanimated Jest mock transpile", () => {
       /const\s+_GetterExport\s*=\s*__lazyExport\(\s*\(\)\s*=>\s*module\.exports\.GetterExport,\s*true\s*\)/,
     );
     expect(output).toContain("const _ValueExport = module.exports.ValueExport");
-    expect(output).not.toContain(
-      "const _ValueExport = __lazyExport(() => module.exports.ValueExport, true)",
-    );
+    expect(output).not.toContain("const _ValueExport = __lazyExport(() => module.exports.ValueExport, true)");
   });
 });

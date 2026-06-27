@@ -105,11 +105,9 @@ const browserWindow = Object.assign(globalThis, {
   document: browserDocument,
   history: browserHistory,
   location: browserLocation,
-  removeEventListener: jest.fn(
-    (eventName: string, listener: EventListenerOrEventListenerObject) => {
-      eventListeners.get(eventName)?.delete(listener);
-    },
-  ),
+  removeEventListener: jest.fn((eventName: string, listener: EventListenerOrEventListenerObject) => {
+    eventListeners.get(eventName)?.delete(listener);
+  }),
 });
 
 Object.defineProperties(globalThis, {
@@ -184,9 +182,7 @@ try {
 
 const mockFromPreset = (moduleName: string, presetMockPath?: string) => {
   mock.module(moduleName, () =>
-    presetMockPath
-      ? normalizePresetMock(reactNativeJestMock(presetMockPath.replace("./mocks/", "")))
-      : { default: {} },
+    presetMockPath ? normalizePresetMock(reactNativeJestMock(presetMockPath.replace("./mocks/", ""))) : { default: {} },
   );
 };
 
@@ -231,18 +227,13 @@ reactNativeNativeModules.SourceCode.getConstants = () => ({
 });
 const rngestureHandlerModule = {
   ...(reactNativeNativeModules.RNGestureHandlerModule ?? {}),
-  createGestureHandler:
-    reactNativeNativeModules.RNGestureHandlerModule?.createGestureHandler ?? jest.fn(),
-  configureRelations:
-    reactNativeNativeModules.RNGestureHandlerModule?.configureRelations ?? jest.fn(),
+  createGestureHandler: reactNativeNativeModules.RNGestureHandlerModule?.createGestureHandler ?? jest.fn(),
+  configureRelations: reactNativeNativeModules.RNGestureHandlerModule?.configureRelations ?? jest.fn(),
   install: reactNativeNativeModules.RNGestureHandlerModule?.install ?? jest.fn(),
   installUIRuntimeBindings:
-    reactNativeNativeModules.RNGestureHandlerModule?.installUIRuntimeBindings ??
-    jest.fn(() => true),
-  setGestureHandlerConfig:
-    reactNativeNativeModules.RNGestureHandlerModule?.setGestureHandlerConfig ?? jest.fn(),
-  updateGestureHandlerConfig:
-    reactNativeNativeModules.RNGestureHandlerModule?.updateGestureHandlerConfig ?? jest.fn(),
+    reactNativeNativeModules.RNGestureHandlerModule?.installUIRuntimeBindings ?? jest.fn(() => true),
+  setGestureHandlerConfig: reactNativeNativeModules.RNGestureHandlerModule?.setGestureHandlerConfig ?? jest.fn(),
+  updateGestureHandlerConfig: reactNativeNativeModules.RNGestureHandlerModule?.updateGestureHandlerConfig ?? jest.fn(),
 };
 Object.defineProperty(reactNativeNativeModules, "RNGestureHandlerModule", {
   configurable: true,
@@ -258,19 +249,13 @@ const keyboardControllerModule = {
     reactNativeNativeModules.KeyboardController?.dismiss ??
     jest.fn((_keepFocus?: boolean, _animated?: boolean) => undefined),
   getConstants:
-    reactNativeNativeModules.KeyboardController?.getConstants ??
-    jest.fn(() => ({ keyboardBorderRadius: 0 })),
+    reactNativeNativeModules.KeyboardController?.getConstants ?? jest.fn(() => ({ keyboardBorderRadius: 0 })),
   preload: reactNativeNativeModules.KeyboardController?.preload ?? jest.fn(),
   removeListeners: reactNativeNativeModules.KeyboardController?.removeListeners ?? jest.fn(),
   setDefaultMode: reactNativeNativeModules.KeyboardController?.setDefaultMode ?? jest.fn(),
-  setFocusTo:
-    reactNativeNativeModules.KeyboardController?.setFocusTo ??
-    jest.fn((_direction: string) => undefined),
-  setInputMode:
-    reactNativeNativeModules.KeyboardController?.setInputMode ??
-    jest.fn((_mode: number) => undefined),
-  viewPositionInWindow:
-    reactNativeNativeModules.KeyboardController?.viewPositionInWindow ?? jest.fn(async () => ({})),
+  setFocusTo: reactNativeNativeModules.KeyboardController?.setFocusTo ?? jest.fn((_direction: string) => undefined),
+  setInputMode: reactNativeNativeModules.KeyboardController?.setInputMode ?? jest.fn((_mode: number) => undefined),
+  viewPositionInWindow: reactNativeNativeModules.KeyboardController?.viewPositionInWindow ?? jest.fn(async () => ({})),
 };
 Object.defineProperty(reactNativeNativeModules, "KeyboardController", {
   configurable: true,
@@ -292,34 +277,19 @@ mock.module("react-native/Libraries/BatchedBridge/NativeModules", () => ({
 }));
 mockFromPreset("react-native/Libraries/Core/InitializeCore", "./mocks/InitializeCore");
 mockFromPreset("react-native/Libraries/Core/NativeExceptionsManager");
-mockFromPreset(
-  "react-native/Libraries/NativeComponent/NativeComponentRegistry",
-  "./mocks/NativeComponentRegistry",
-);
+mockFromPreset("react-native/Libraries/NativeComponent/NativeComponentRegistry", "./mocks/NativeComponentRegistry");
 mockFromPreset("react-native/Libraries/ReactNative/RendererProxy", "./mocks/RendererProxy");
-mockFromPreset(
-  "react-native/Libraries/ReactNative/requireNativeComponent",
-  "./mocks/requireNativeComponent",
-);
+mockFromPreset("react-native/Libraries/ReactNative/requireNativeComponent", "./mocks/requireNativeComponent");
 mockFromPreset("react-native/Libraries/ReactNative/UIManager", "./mocks/UIManager");
 mock.module("react-native/Libraries/Components/View/ViewNativeComponent", mockViewNativeComponent);
 mockFromPreset("react-native/Libraries/Text/Text", "./mocks/Text");
 mockFromPreset("react-native/Libraries/Components/View/View", "./mocks/View");
 
 mockFromPreset("react-native/Libraries/AppState/AppState", "./mocks/AppState");
-mockFromPreset(
-  "react-native/Libraries/Components/AccessibilityInfo/AccessibilityInfo",
-  "./mocks/AccessibilityInfo",
-);
-mockFromPreset(
-  "react-native/Libraries/Components/ActivityIndicator/ActivityIndicator",
-  "./mocks/ActivityIndicator",
-);
+mockFromPreset("react-native/Libraries/Components/AccessibilityInfo/AccessibilityInfo", "./mocks/AccessibilityInfo");
+mockFromPreset("react-native/Libraries/Components/ActivityIndicator/ActivityIndicator", "./mocks/ActivityIndicator");
 mockFromPreset("react-native/Libraries/Components/Clipboard/Clipboard", "./mocks/Clipboard");
-mockFromPreset(
-  "react-native/Libraries/Components/RefreshControl/RefreshControl",
-  "./mocks/RefreshControl",
-);
+mockFromPreset("react-native/Libraries/Components/RefreshControl/RefreshControl", "./mocks/RefreshControl");
 mockFromPreset("react-native/Libraries/Components/ScrollView/ScrollView", "./mocks/ScrollView");
 mockFromPreset("react-native/Libraries/Components/TextInput/TextInput", "./mocks/TextInput");
 mockFromPreset("react-native/Libraries/Image/Image", "./mocks/Image");

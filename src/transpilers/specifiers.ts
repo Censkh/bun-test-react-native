@@ -4,8 +4,7 @@ export type SpecifierKind = "dynamic-import" | "export-all" | "export-named" | "
 
 export type SpecifierRewriter = (specifier: string, kind: SpecifierKind) => string;
 
-export const isRelativeSpecifier = (specifier: string) =>
-  specifier.startsWith("./") || specifier.startsWith("../");
+export const isRelativeSpecifier = (specifier: string) => specifier.startsWith("./") || specifier.startsWith("../");
 
 export const isExtensionlessRelativeSpecifier = (specifier: string) => {
   if (!isRelativeSpecifier(specifier)) return false;

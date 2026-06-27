@@ -31,14 +31,9 @@ type PackageJson = {
 const DEFAULT_SOURCE_EXTENSIONS = ["tsx", "ts", "jsx", "js", "json"] as const;
 const DEFAULT_PACKAGE_MAIN_FIELDS = ["react-native", "browser", "module", "main"] as const;
 const DEFAULT_PLATFORM: ReactNativePlatform = "ios";
-const REACT_NATIVE_PACKAGE_PATH_PATTERN =
-  /[/\\]node_modules[/\\](?:@react-native[/\\][^/\\]+|react-native)(?:[/\\]|$)/;
-const REACT_NATIVE_WORKLETS_PACKAGE_PATH_PATTERN =
-  /[/\\]node_modules[/\\]react-native-worklets(?:[/\\]|$)/;
-const BUILTIN_MODULES = new Set([
-  ...builtinModules,
-  ...builtinModules.map((moduleName) => `node:${moduleName}`),
-]);
+const REACT_NATIVE_PACKAGE_PATH_PATTERN = /[/\\]node_modules[/\\](?:@react-native[/\\][^/\\]+|react-native)(?:[/\\]|$)/;
+const REACT_NATIVE_WORKLETS_PACKAGE_PATH_PATTERN = /[/\\]node_modules[/\\]react-native-worklets(?:[/\\]|$)/;
+const BUILTIN_MODULES = new Set([...builtinModules, ...builtinModules.map((moduleName) => `node:${moduleName}`)]);
 const projectRequire = createRequire(process.cwd());
 
 const isRelativeOrAbsolute = (specifier: string) =>
@@ -50,8 +45,7 @@ const isRelativeOrAbsolute = (specifier: string) =>
 
 const isBuiltin = (specifier: string) => BUILTIN_MODULES.has(specifier);
 
-export const toFilePath = (filePath: string) =>
-  filePath.startsWith("file:") ? fileURLToPath(filePath) : filePath;
+export const toFilePath = (filePath: string) => (filePath.startsWith("file:") ? fileURLToPath(filePath) : filePath);
 
 export const hasPlatformExtension = (filePath: string, platform: ReactNativePlatform) =>
   filePath.includes(`.${platform}.`) || filePath.includes(".native.");
@@ -110,9 +104,7 @@ const extensionCandidates = (
       : [`.${options.platform}`, ".native", ""];
 
   return platformPrefixes.flatMap((platformPrefix) =>
-    sourceExtensions.map(
-      (sourceExtension) => `${extensionBasePath}${platformPrefix}.${sourceExtension}`,
-    ),
+    sourceExtensions.map((sourceExtension) => `${extensionBasePath}${platformPrefix}.${sourceExtension}`),
   );
 };
 
@@ -126,10 +118,7 @@ const resolveFile = (
   return null;
 };
 
-const getPackageMainValue = (
-  packageJson: PackageJson,
-  packageMainFields: readonly string[],
-): string | undefined => {
+const getPackageMainValue = (packageJson: PackageJson, packageMainFields: readonly string[]): string | undefined => {
   for (const field of packageMainFields) {
     const value = packageJson[field as keyof PackageJson];
     if (typeof value === "string") return value;
@@ -162,14 +151,10 @@ const applyReactNativePackageMap = (
 
 const resolveDirectory = (
   directoryPath: string,
-  options: Required<
-    Pick<ReactNativeResolverOptions, "packageMainFields" | "platform" | "sourceExtensions">
-  >,
+  options: Required<Pick<ReactNativeResolverOptions, "packageMainFields" | "platform" | "sourceExtensions">>,
 ) => {
   const packageJson = readPackageJson(directoryPath);
-  const packageMain = packageJson
-    ? getPackageMainValue(packageJson, options.packageMainFields)
-    : "index";
+  const packageMain = packageJson ? getPackageMainValue(packageJson, options.packageMainFields) : "index";
   if (packageMain) {
     const packageMainPath = resolveFile(path.resolve(directoryPath, packageMain), options);
     if (packageMainPath) return packageMainPath;
@@ -180,9 +165,7 @@ const resolveDirectory = (
 
 const resolvePath = (
   basePath: string,
-  options: Required<
-    Pick<ReactNativeResolverOptions, "packageMainFields" | "platform" | "sourceExtensions">
-  >,
+  options: Required<Pick<ReactNativeResolverOptions, "packageMainFields" | "platform" | "sourceExtensions">>,
 ) => {
   const filePath = resolveFile(basePath, options);
   if (filePath) return filePath;
@@ -201,11 +184,7 @@ const parsePackageSpecifier = (specifier: string) => {
   return { packageName, packageSubpath };
 };
 
-const findPackageDirectory = (
-  packageName: string,
-  importerDirectory: string,
-  projectRoot: string,
-) => {
+const findPackageDirectory = (packageName: string, importerDirectory: string, projectRoot: string) => {
   let currentDirectory = importerDirectory;
   while (true) {
     const candidate = path.join(currentDirectory, "node_modules", packageName);
@@ -262,13 +241,8 @@ const resolvePackageExports = (specifier: string, importerDirectory: string) => 
 export const normalizeResolverOptions = (options: ReactNativeResolverOptions = {}) => ({
   packageMainFields: options.packageMainFields ?? DEFAULT_PACKAGE_MAIN_FIELDS,
   platform:
-    options.platform ??
-    process.env.BUN_REACT_NATIVE_PLATFORM ??
-    process.env.REACT_NATIVE_PLATFORM ??
-    DEFAULT_PLATFORM,
-  projectRoot: options.projectRoot
-    ? path.resolve(options.projectRoot)
-    : findWorkspaceRoot(process.cwd()),
+    options.platform ?? process.env.BUN_REACT_NATIVE_PLATFORM ?? process.env.REACT_NATIVE_PLATFORM ?? DEFAULT_PLATFORM,
+  projectRoot: options.projectRoot ? path.resolve(options.projectRoot) : findWorkspaceRoot(process.cwd()),
   sourceExtensions: options.sourceExtensions ?? DEFAULT_SOURCE_EXTENSIONS,
 });
 
@@ -320,19 +294,14 @@ export const resolveReactNativeImport = (
   }
 
   const { packageName, packageSubpath } = parsePackageSpecifier(specifier);
-  const packageDirectory = findPackageDirectory(
-    packageName,
-    importerDirectory,
-    normalizedOptions.projectRoot,
-  );
+  const packageDirectory = findPackageDirectory(packageName, importerDirectory, normalizedOptions.projectRoot);
   if (!packageDirectory) return cacheResult(null);
 
   const packageJson = readPackageJson(packageDirectory);
   const mappedSubpath = applyReactNativePackageMap(packageJson, packageDirectory, packageSubpath);
   if (mappedSubpath === "empty:") return cacheResult({ path: mappedSubpath });
 
-  const exportedPath =
-    packageSubpath && !mappedSubpath ? resolvePackageExports(specifier, importerDirectory) : null;
+  const exportedPath = packageSubpath && !mappedSubpath ? resolvePackageExports(specifier, importerDirectory) : null;
   if (exportedPath) {
     const resolvedExportPath = resolvePath(exportedPath, normalizedOptions);
     return cacheResult({ path: resolvedExportPath ?? exportedPath });

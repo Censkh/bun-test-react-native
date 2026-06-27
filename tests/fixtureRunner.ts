@@ -2,8 +2,7 @@ import { expect } from "bun:test";
 import fs from "node:fs";
 import path from "node:path";
 
-export const fixturePath = (testDir: string, fixtureName: string) =>
-  path.join(testDir, "fixtures", fixtureName);
+export const fixturePath = (testDir: string, fixtureName: string) => path.join(testDir, "fixtures", fixtureName);
 
 const findFixtureTests = (fixtureRoot: string): string[] => {
   const fixtureTests: string[] = [];

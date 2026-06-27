@@ -247,9 +247,7 @@ describe("lazy CommonJS getter export runtime shape", () => {
 
     expect(typeof module.MemoComponent).toBe("function");
     expect(module.MemoComponent.$$typeof).toBe(Symbol.for("react.memo"));
-    const screen = render(
-      React.createElement(module.MemoComponent, { "data-testid": "lazy-memo-component" }),
-    );
+    const screen = render(React.createElement(module.MemoComponent, { "data-testid": "lazy-memo-component" }));
 
     expect(screen.getByTestId("lazy-memo-component").tagName).toBe("DIV");
   });

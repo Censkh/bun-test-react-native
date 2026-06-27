@@ -6,14 +6,9 @@ type SwcNode = Record<string, unknown>;
 const isNode = (value: unknown): value is SwcNode =>
   value != null && typeof value === "object" && typeof (value as SwcNode).type === "string";
 
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  value != null && typeof value === "object";
+const isObject = (value: unknown): value is Record<string, unknown> => value != null && typeof value === "object";
 
-const rewriteStringLiteral = (
-  node: unknown,
-  kind: SpecifierKind,
-  rewriteSpecifier: SpecifierRewriter,
-) => {
+const rewriteStringLiteral = (node: unknown, kind: SpecifierKind, rewriteSpecifier: SpecifierRewriter) => {
   if (!isNode(node) || node.type !== "StringLiteral" || typeof node.value !== "string") return;
   const nextValue = rewriteSpecifier(node.value, kind);
   if (nextValue === node.value) return;
@@ -81,11 +76,7 @@ const visit = (node: unknown, rewriteSpecifier: SpecifierRewriter) => {
   }
 };
 
-export const rewriteSpecifiersWithSwc = (
-  source: string,
-  filename: string,
-  rewriteSpecifier: SpecifierRewriter,
-) => {
+export const rewriteSpecifiersWithSwc = (source: string, filename: string, rewriteSpecifier: SpecifierRewriter) => {
   const isTypeScript = /\.[cm]?tsx?$/.test(filename);
   const ast = parseSync(source, {
     comments: false,

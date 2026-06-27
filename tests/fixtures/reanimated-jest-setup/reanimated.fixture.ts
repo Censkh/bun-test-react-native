@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-const importNativeReanimated = () =>
-  import("react-native-reanimated/lib/module/ReanimatedModule/NativeReanimated.js");
+const importNativeReanimated = () => import("react-native-reanimated/lib/module/ReanimatedModule/NativeReanimated.js");
 
 describe("react-native-reanimated Jest setup compatibility", () => {
   test("loads Reanimated's own mock and setup helpers", () => {

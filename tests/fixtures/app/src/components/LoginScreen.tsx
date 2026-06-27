@@ -35,7 +35,7 @@ export default function LoginScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const [isSigningIn, setIsSigningIn] = useState(false);
-  const [isMagicLinkState, setIsMagicLinkState] = useState(false);
+  const [isMagicLinkState, _setIsMagicLinkState] = useState(false);
   const signInProgress = useSharedValue(0);
 
   useEffect(() => {

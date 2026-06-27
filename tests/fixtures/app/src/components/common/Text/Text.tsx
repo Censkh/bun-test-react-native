@@ -10,9 +10,7 @@ function Text(props: TextProps) {
   return <NativeText {...props} />;
 }
 
-Text.CascadingStylesProvider = function CascadingStylesProvider({
-  children,
-}: CascadingStylesProviderProps) {
+Text.CascadingStylesProvider = function CascadingStylesProvider({ children }: CascadingStylesProviderProps) {
   return <>{children}</>;
 };
 

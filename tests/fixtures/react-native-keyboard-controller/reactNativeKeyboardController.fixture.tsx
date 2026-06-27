@@ -2,11 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { render } from "@testing-library/react-native";
 import React from "react";
 import { Text } from "react-native";
-import {
-  KeyboardController,
-  KeyboardProvider,
-  useKeyboardController,
-} from "react-native-keyboard-controller";
+import { KeyboardController, KeyboardProvider, useKeyboardController } from "react-native-keyboard-controller";
 
 const KeyboardControllerReader = () => {
   const keyboard = useKeyboardController();

@@ -53,8 +53,7 @@ const AppState = {
   getConstants: () => ({
     initialAppState: "active",
   }),
-  getCurrentAppState: (success?: (state: { app_state: string }) => void) =>
-    success?.({ app_state: "active" }),
+  getCurrentAppState: (success?: (state: { app_state: string }) => void) => success?.({ app_state: "active" }),
   removeListeners: noop,
 };
 
@@ -167,8 +166,7 @@ const NativeModules = {
     getApplicationIconBadgeNumber: (callback?: (count: number) => void) => callback?.(0),
     getDeliveredNotifications: (callback?: (notifications: unknown[]) => void) => callback?.([]),
     getInitialNotification: () => Promise.resolve(null),
-    getScheduledLocalNotifications: (callback?: (notifications: unknown[]) => void) =>
-      callback?.([]),
+    getScheduledLocalNotifications: (callback?: (notifications: unknown[]) => void) => callback?.([]),
     presentLocalNotification: noop,
     removeAllDeliveredNotifications: noop,
     removeAllPendingNotificationRequests: noop,

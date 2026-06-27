@@ -8,11 +8,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 describe("react-native-gesture-handler jestSetup", () => {
   test("renders GestureHandlerRootView under Bun", async () => {
     const result = await render(
-      React.createElement(
-        GestureHandlerRootView,
-        null,
-        React.createElement(Text, null, "gesture root"),
-      ),
+      React.createElement(GestureHandlerRootView, null, React.createElement(Text, null, "gesture root")),
     );
 
     expect(result.getByText("gesture root")).toBeTruthy();

@@ -17,11 +17,7 @@ import {
   shouldRewriteExtensionlessSpecifier,
 } from "./transpilers/swc/extensionlessSpecifiers";
 import { rewriteSpecifiersWithSwc } from "./transpilers/swc/rewriteSpecifiers";
-import type {
-  JavaScriptLoader,
-  TranspileTransform,
-  TranspileTransformId,
-} from "./transpilers/types";
+import type { JavaScriptLoader, TranspileTransform, TranspileTransformId } from "./transpilers/types";
 
 export type {
   JavaScriptLoader,
@@ -60,8 +56,7 @@ const hasFlowSyntax = (source: string) => /@flow\b/.test(source);
 
 const hasCommonJsExportSyntax = (source: string) => CJS_EXPORT_PATTERN.test(source);
 
-const hasDefaultExportPropertySyntax = (source: string) =>
-  DEFAULT_EXPORT_PROPERTY_PATTERN.test(source);
+const hasDefaultExportPropertySyntax = (source: string) => DEFAULT_EXPORT_PROPERTY_PATTERN.test(source);
 
 const needsCommonJsExports = (source: string) =>
   hasCommonJsExportSyntax(source) || hasDefaultExportPropertySyntax(source);
@@ -127,14 +122,8 @@ export type ReactNativeTranspileRequest = {
   transforms?: readonly TranspileTransformId[];
 };
 
-export const transpile = ({
-  filePath,
-  options = {},
-  source,
-  transforms,
-}: ReactNativeTranspileRequest) => {
-  const activeTransforms =
-    transforms ?? getReactNativeTransformations(source, filePath, undefined, options);
+export const transpile = ({ filePath, options = {}, source, transforms }: ReactNativeTranspileRequest) => {
+  const activeTransforms = transforms ?? getReactNativeTransformations(source, filePath, undefined, options);
   return getTranspileBackend().transform(source, {
     filename: filePath,
     resolverOptions: options,
@@ -142,10 +131,7 @@ export const transpile = ({
   });
 };
 
-export const hasExtensionlessPlatformSpecifier = (
-  source: string,
-  loader: JavaScriptLoader = "js",
-) => {
+export const hasExtensionlessPlatformSpecifier = (source: string, loader: JavaScriptLoader = "js") => {
   if (HAS_EXTENSIONLESS_RELATIVE_SPECIFIER_PATTERN.test(source)) return true;
 
   try {
@@ -237,9 +223,7 @@ export const rewriteRelativeSpecifiersToFileUrls = (
       normalizedOptions,
     );
 
-    return result?.path && result.path !== "empty:"
-      ? pathToFileURL(toFilePath(result.path)).href
-      : specifier;
+    return result?.path && result.path !== "empty:" ? pathToFileURL(toFilePath(result.path)).href : specifier;
   });
 };
 

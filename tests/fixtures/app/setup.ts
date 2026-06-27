@@ -31,9 +31,7 @@ notifyManager.setNotifyFunction((callback: () => void) => {
 
 mock.module("expo-blob", () => ({ Blob: globalThis.Blob }));
 mock.module("@shopify/flash-list", () => require("./src/tests/mock/FlashList.mock.cjs"));
-mock.module("react-native-nitro-auth", () =>
-  require("./src/tests/mock/ReactNativeNitroAuth.mock.cjs"),
-);
+mock.module("react-native-nitro-auth", () => require("./src/tests/mock/ReactNativeNitroAuth.mock.cjs"));
 require("react-native-reanimated/mock").setUpTests();
 
 mock.module("uniwind", () => require("./src/tests/mock/Uniwind.mock.cjs"));

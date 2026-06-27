@@ -27,9 +27,7 @@ const normalizeReanimatedMock = (reanimated: Record<string, unknown>) => {
   };
 };
 
-mock.module("react-native-reanimated", () =>
-  normalizeReanimatedMock(require("actual:react-native-reanimated/mock")),
-);
+mock.module("react-native-reanimated", () => normalizeReanimatedMock(require("actual:react-native-reanimated/mock")));
 
 mock.module("react-native-reanimated/mock", () =>
   normalizeReanimatedMock(require("actual:react-native-reanimated/mock")),

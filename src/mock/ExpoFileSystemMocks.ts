@@ -136,9 +136,7 @@ const createFileBackedFileSystemModule = (fileSystem: any) => {
 };
 
 export const getExpoFileSystemNativeModule = () => {
-  expoFileSystemNativeModule ??= createFileBackedFileSystemModule(
-    require(`actual:${expoFileSystemMockPath}`),
-  );
+  expoFileSystemNativeModule ??= createFileBackedFileSystemModule(require(`actual:${expoFileSystemMockPath}`));
   return expoFileSystemNativeModule;
 };
 
@@ -162,8 +160,7 @@ type DownloadOptions = {
 const getFileInfo = (uri: string, options?: { md5?: boolean }) =>
   new (getExpoFileSystemNativeModule().FileSystemFile)(uri).info(options);
 
-const getDirectoryInfo = (uri: string) =>
-  new (getExpoFileSystemNativeModule().FileSystemDirectory)(uri).info();
+const getDirectoryInfo = (uri: string) => new (getExpoFileSystemNativeModule().FileSystemDirectory)(uri).info();
 
 export const resetExpoFileSystemMock = () => {
   getExpoFileSystemNativeModule().__resetMockFileSystem?.();
@@ -211,9 +208,7 @@ export const getExponentFileSystemNativeModule = () => {
     makeDirectoryAsync: jest.fn(async (uri: string, options: DirectoryCreateOptions = {}) => {
       new fileSystem.FileSystemDirectory(uri).create(options);
     }),
-    readAsStringAsync: jest.fn(async (uri: string) =>
-      new fileSystem.FileSystemFile(uri).textSync(),
-    ),
+    readAsStringAsync: jest.fn(async (uri: string) => new fileSystem.FileSystemFile(uri).textSync()),
     readDirectoryAsync: jest.fn(async (uri: string) =>
       new fileSystem.FileSystemDirectory(uri)
         .listAsRecords()
