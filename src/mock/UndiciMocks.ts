@@ -1,5 +1,12 @@
 import { mock } from "bun:test";
 
+const workerThreads = require("node:worker_threads");
+
+// Undici 8 uses Node's worker_threads.markAsUncloneable when constructing its
+// Web API classes. Bun does not expose that helper, but tests only need the
+// objects to exist in-process, so a no-op keeps npm Undici loadable under Bun.
+workerThreads.markAsUncloneable ??= () => {};
+
 const realUndici = require("undici/index.js");
 
 type FetchInit = RequestInit & { dispatcher?: unknown };

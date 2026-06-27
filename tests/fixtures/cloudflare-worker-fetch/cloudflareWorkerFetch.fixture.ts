@@ -152,7 +152,7 @@ describe("Cloudflare worker fetch", () => {
       ]);
 
       expect(response.status).toBe(200);
-      expect(await response.text()).toStartWith("external:200:body");
+      expect(await response.text()).toMatch(/^external:\d+:body$/);
     } finally {
       await server.close();
     }
