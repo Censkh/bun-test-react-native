@@ -5,6 +5,7 @@
   "description": "Run React Native and Expo tests in Bun",
   "sideEffects": false,
   "scripts": {
+    "prepublishOnly": "bun run check:fix && bun run test",
     "test": "bun test --parallel=3",
     "check": "tsc --noEmit --project tsconfig.json && npx @biomejs/biome check .",
     "check:fix": "tsc --noEmit --project tsconfig.json && npx @biomejs/biome check --write ."
@@ -27,7 +28,7 @@
   "repository": "https://github.com/Censkh/bun-test-react-native",
   "dependencies": {
     "@react-native/jest-preset": "0.85.3",
-    "bun-jest-require-actual": "workspace:*",
+    "bun-jest-require-actual": "^0.0.1",
     "jest-expo": "~56.0.5",
     "undici": "^7.24.8"
   },
