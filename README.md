@@ -1,5 +1,7 @@
 # bun-test-react-native
 
+[![npm version](https://img.shields.io/npm/v/bun-test-react-native.svg)](https://www.npmjs.com/package/bun-test-react-native)
+
 Run React Native and Expo tests in Bun
 
 ## Usage
