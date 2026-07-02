@@ -5,6 +5,7 @@ declare global {
   var __REACT_DEVTOOLS_GLOBAL_HOOK__: unknown;
   var IS_REACT_ACT_ENVIRONMENT: boolean | undefined;
   var IS_REACT_NATIVE_TEST_ENVIRONMENT: boolean | undefined;
+  var nativeModuleProxy: Record<string, unknown> | undefined;
   var __turboModuleProxy: ((name: string) => unknown) | undefined;
   var ErrorUtils:
     | {
@@ -225,10 +226,50 @@ reactNativeNativeModules.SourceCode ??= {};
 reactNativeNativeModules.SourceCode.getConstants = () => ({
   scriptURL: "http://localhost:8081/index.bundle?platform=ios",
 });
+const reactNativeUIManager = {
+  ...reactNativeNativeModules.UIManager,
+  blur: reactNativeNativeModules.UIManager?.blur ?? jest.fn(),
+  createView: reactNativeNativeModules.UIManager?.createView ?? jest.fn(),
+  customBubblingEventTypes: reactNativeNativeModules.UIManager?.customBubblingEventTypes ?? {},
+  customDirectEventTypes: reactNativeNativeModules.UIManager?.customDirectEventTypes ?? {},
+  dispatchViewManagerCommand: reactNativeNativeModules.UIManager?.dispatchViewManagerCommand ?? jest.fn(),
+  focus: reactNativeNativeModules.UIManager?.focus ?? jest.fn(),
+  getConstants:
+    reactNativeNativeModules.UIManager?.getConstants ??
+    jest.fn(() => ({
+      genericBubblingEventTypes: {},
+      genericDirectEventTypes: {},
+    })),
+  getConstantsForViewManager: reactNativeNativeModules.UIManager?.getConstantsForViewManager ?? jest.fn(() => null),
+  getDefaultEventTypes:
+    reactNativeNativeModules.UIManager?.getDefaultEventTypes ??
+    jest.fn(() => ({
+      bubblingEventTypes: {},
+      directEventTypes: {},
+    })),
+  getViewManagerConfig: reactNativeNativeModules.UIManager?.getViewManagerConfig ?? jest.fn(() => null),
+  hasViewManagerConfig: reactNativeNativeModules.UIManager?.hasViewManagerConfig ?? jest.fn(() => false),
+  measure: reactNativeNativeModules.UIManager?.measure ?? jest.fn(),
+  measureInWindow: reactNativeNativeModules.UIManager?.measureInWindow ?? jest.fn(),
+  measureLayout: reactNativeNativeModules.UIManager?.measureLayout ?? jest.fn(),
+  measureLayoutRelativeToParent: reactNativeNativeModules.UIManager?.measureLayoutRelativeToParent ?? jest.fn(),
+  setChildren: reactNativeNativeModules.UIManager?.setChildren ?? jest.fn(),
+  updateView: reactNativeNativeModules.UIManager?.updateView ?? jest.fn(),
+};
+Object.defineProperty(reactNativeNativeModules, "UIManager", {
+  configurable: true,
+  enumerable: true,
+  value: reactNativeUIManager,
+  writable: true,
+});
+globalThis.nativeModuleProxy ??= reactNativeNativeModules;
 const rngestureHandlerModule = {
   ...(reactNativeNativeModules.RNGestureHandlerModule ?? {}),
+  attachGestureHandler: reactNativeNativeModules.RNGestureHandlerModule?.attachGestureHandler ?? jest.fn(),
   createGestureHandler: reactNativeNativeModules.RNGestureHandlerModule?.createGestureHandler ?? jest.fn(),
   configureRelations: reactNativeNativeModules.RNGestureHandlerModule?.configureRelations ?? jest.fn(),
+  dropGestureHandler: reactNativeNativeModules.RNGestureHandlerModule?.dropGestureHandler ?? jest.fn(),
+  flushOperations: reactNativeNativeModules.RNGestureHandlerModule?.flushOperations ?? jest.fn(),
   install: reactNativeNativeModules.RNGestureHandlerModule?.install ?? jest.fn(),
   installUIRuntimeBindings:
     reactNativeNativeModules.RNGestureHandlerModule?.installUIRuntimeBindings ?? jest.fn(() => true),
@@ -268,6 +309,7 @@ const previousTurboModuleProxy = globalThis.__turboModuleProxy;
 globalThis.__turboModuleProxy = (name: string) => {
   if (name === "KeyboardController") return keyboardControllerModule;
   if (name === "RNGestureHandlerModule") return rngestureHandlerModule;
+  if (name === "UIManager") return reactNativeUIManager;
   return previousTurboModuleProxy?.(name) ?? null;
 };
 

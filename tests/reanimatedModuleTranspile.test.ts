@@ -39,7 +39,7 @@ describe("CommonJS dynamic export detection", () => {
   });
 
   test("does not treat react-native-gesture-handler literal getter exports as dynamic", () => {
-    const gestureHandlerIndexPath = require.resolve("react-native-gesture-handler/lib/commonjs/index.js");
+    const gestureHandlerIndexPath = require.resolve("react-native-gesture-handler-2/lib/commonjs/index.js");
     const source = fs.readFileSync(gestureHandlerIndexPath, "utf8");
 
     expect(source).toContain('Object.defineProperty(exports, "GestureHandlerRootView"');

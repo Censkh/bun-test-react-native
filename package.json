@@ -27,17 +27,18 @@
   "license": "MIT",
   "repository": "https://github.com/Censkh/bun-test-react-native",
   "dependencies": {
-    "@react-native/jest-preset": "0.85.3",
+    "@react-native/jest-preset": "0.86.0",
     "bun-jest-require-actual": "^0.0.1",
-    "jest-expo": "~56.0.5",
+    "jest-expo": "~57.0.0",
     "undici": "^8.5.0"
   },
   "devDependencies": {
     "@swc/core": "^1.15.43",
     "@testing-library/react": "^16.3.2",
-    "@types/node": "^26.0.0",
-    "expo-modules-core": "^56.0.16",
-    "react-native": "0.85.3",
+    "@types/node": "^26.1.0",
+    "expo-modules-core": "^57.0.1",
+    "react-native": "0.86.0",
+    "react-native-gesture-handler-2": "npm:react-native-gesture-handler@2.31.2",
     "typescript": "7.0.1-rc"
   }
 }

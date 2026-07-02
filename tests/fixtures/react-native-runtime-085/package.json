@@ -1,0 +1,8 @@
+{
+  "name": "react-native-runtime-085-fixture",
+  "type": "module",
+  "dependencies": {
+    "react": "19.2.3",
+    "react-native": "0.85.3"
+  }
+}

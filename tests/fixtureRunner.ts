@@ -10,6 +10,7 @@ const findFixtureTests = (fixtureRoot: string): string[] => {
     for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
       const entryPath = path.join(directory, entry.name);
       if (entry.isDirectory()) {
+        if (entry.name === "node_modules" || entry.name === "dist" || entry.name === "coverage") continue;
         visit(entryPath);
       } else if (/\.fixture\.tsx?$/.test(entry.name)) {
         fixtureTests.push(`./${path.relative(fixtureRoot, entryPath)}`);
@@ -23,7 +24,7 @@ const findFixtureTests = (fixtureRoot: string): string[] => {
 
 export const expectBunFixtureToPass = (
   fixtureRoot: string,
-  options: { env?: NodeJS.ProcessEnv; logOutput?: boolean } = {},
+  options: { env?: NodeJS.ProcessEnv; installMode?: "full" | "lockfile"; logOutput?: boolean } = {},
 ) => {
   const start = performance.now();
   const packageJsonPath = path.join(fixtureRoot, "package.json");
@@ -36,8 +37,9 @@ export const expectBunFixtureToPass = (
     const hasFileDependency = dependencySpecs.some(
       (specifier) => typeof specifier === "string" && specifier.startsWith("file:"),
     );
+    const shouldInstallNodeModules = options.installMode === "full" || hasFileDependency;
     const installResult = Bun.spawnSync({
-      cmd: hasFileDependency
+      cmd: shouldInstallNodeModules
         ? [process.execPath, "install", "--no-save"]
         : [process.execPath, "install", "--no-save", "--lockfile-only"],
       cwd: fixtureRoot,

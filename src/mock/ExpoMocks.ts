@@ -268,7 +268,7 @@ const attemptLookup = (moduleName) => {
   return null;
 };
 
-mock.module("expo-modules-core", () => {
+const createExpoModulesCoreMock = () => {
   const ExpoModulesCore = getActualExpoModulesCore();
   const actualRequireOptionalNativeModule = ExpoModulesCore.requireOptionalNativeModule?.bind(ExpoModulesCore);
   const actualRequireNativeViewManager = ExpoModulesCore.requireNativeViewManager?.bind(ExpoModulesCore);
@@ -382,6 +382,31 @@ mock.module("expo-modules-core", () => {
     uuid: ExpoModulesCore.uuid ?? {
       v4: jest.fn(() => "00000000-0000-4000-8000-000000000000"),
     },
+  };
+};
+
+let expoModulesCoreMock: any;
+const getExpoModulesCoreMock = () => (expoModulesCoreMock ??= createExpoModulesCoreMock());
+
+mock.module("expo-modules-core", () => getExpoModulesCoreMock());
+
+mock.module("expo", () => {
+  const Expo = require("actual:expo");
+  const ExpoModulesCore = getExpoModulesCoreMock();
+  return {
+    __esModule: true,
+    ...Expo,
+    EventEmitter: ExpoModulesCore.EventEmitter,
+    NativeModule: ExpoModulesCore.NativeModule,
+    SharedObject: ExpoModulesCore.SharedObject,
+    SharedRef: ExpoModulesCore.SharedRef,
+    installOnUIRuntime: ExpoModulesCore.installOnUIRuntime,
+    registerWebModule: ExpoModulesCore.registerWebModule,
+    reloadAppAsync: ExpoModulesCore.reloadAppAsync,
+    requireNativeModule: ExpoModulesCore.requireNativeModule,
+    requireNativeView: ExpoModulesCore.requireNativeViewManager,
+    requireNativeViewManager: ExpoModulesCore.requireNativeViewManager,
+    requireOptionalNativeModule: ExpoModulesCore.requireOptionalNativeModule,
   };
 });
 
