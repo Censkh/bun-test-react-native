@@ -1,4 +1,8 @@
 import { jest, mock } from "bun:test";
+import { createRequire } from "node:module";
+import path from "node:path";
+
+const cwdRequire = createRequire(path.join(process.cwd(), "__bun_test_react_native__.js"));
 
 declare global {
   var __DEV__: boolean | undefined;
@@ -320,13 +324,22 @@ mock.module("react-native/Libraries/BatchedBridge/NativeModules", () => ({
 mockFromPreset("react-native/Libraries/Core/InitializeCore", "./mocks/InitializeCore");
 mockFromPreset("react-native/Libraries/Core/NativeExceptionsManager");
 mockFromPreset("react-native/Libraries/NativeComponent/NativeComponentRegistry", "./mocks/NativeComponentRegistry");
-mockFromPreset("react-native/Libraries/ReactNative/RendererProxy", "./mocks/RendererProxy");
+const mockRendererProxy = () => ({
+  ...require("actual:react-native/Libraries/ReactNative/RendererImplementation"),
+  findNodeHandle: jest.fn(() => 1),
+});
+mock.module("react-native/Libraries/ReactNative/RendererProxy", mockRendererProxy);
+try {
+  mock.module(require.resolve("react-native/Libraries/ReactNative/RendererProxy"), mockRendererProxy);
+} catch {}
+try {
+  mock.module(cwdRequire.resolve("react-native/Libraries/ReactNative/RendererProxy"), mockRendererProxy);
+} catch {}
 mockFromPreset("react-native/Libraries/ReactNative/requireNativeComponent", "./mocks/requireNativeComponent");
 mockFromPreset("react-native/Libraries/ReactNative/UIManager", "./mocks/UIManager");
 mock.module("react-native/Libraries/Components/View/ViewNativeComponent", mockViewNativeComponent);
 mockFromPreset("react-native/Libraries/Text/Text", "./mocks/Text");
 mockFromPreset("react-native/Libraries/Components/View/View", "./mocks/View");
-
 mockFromPreset("react-native/Libraries/AppState/AppState", "./mocks/AppState");
 mockFromPreset("react-native/Libraries/Components/AccessibilityInfo/AccessibilityInfo", "./mocks/AccessibilityInfo");
 mockFromPreset("react-native/Libraries/Components/ActivityIndicator/ActivityIndicator", "./mocks/ActivityIndicator");

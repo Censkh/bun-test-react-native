@@ -169,6 +169,7 @@ const getNodeModulesPackage = (filePath: string) => {
 
 const getNodeModulesTransformCachePath = (
   filePath: string,
+  source: string,
   transformations: readonly string[],
   options: ReturnType<typeof normalizeResolverOptions>,
 ) => {
@@ -182,6 +183,7 @@ const getNodeModulesTransformCachePath = (
       packageVersion: packageInfo.version,
       path: packageInfo.relativePath,
       platform: options.platform,
+      sourceHash: hashText(source),
       transforms: transformations,
     }),
   );
@@ -373,7 +375,7 @@ export const reactNativePlatformResolverPlugin: BunPlugin = {
       }
 
       debug("onLoad normal", filePath, { transformations });
-      const cachePath = getNodeModulesTransformCachePath(filePath, transformations, options);
+      const cachePath = getNodeModulesTransformCachePath(filePath, source, transformations, options);
       if (cachePath) {
         const cached = readCachedTransform(cachePath);
         if (cached !== null) {

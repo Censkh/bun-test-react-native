@@ -14,19 +14,31 @@ import { createExpoUIViewMock, getExpoUINativeModule } from "./ExpoUIMocks";
 import { reactNativeNativeModules } from "./ReactNativeMocks";
 
 const require = createRequire(import.meta.url);
+const cwdRequire = createRequire(path.join(process.cwd(), "__bun_test_react_native__.js"));
 const mockNativeModules = reactNativeNativeModules;
 process.env.EXPO_OS ??= "ios";
+require("actual:expo-modules-core/src/polyfill/dangerous-internal").installExpoGlobalPolyfill();
+
+const getExpoGlobal = () => {
+  const expoGlobal = ((globalThis as any).expo ??= {});
+  expoGlobal.modules ??= {};
+  expoGlobal.getViewConfig ??= () => ({
+    directEventTypes: {},
+    validAttributes: {},
+  });
+  return expoGlobal;
+};
+
 let actualExpoModulesCore: any;
 const getActualExpoModulesCore = () => {
   if (!actualExpoModulesCore) {
-    require("actual:expo-modules-core/src/polyfill/dangerous-internal").installExpoGlobalPolyfill();
     actualExpoModulesCore = require("actual:expo-modules-core");
   }
   return actualExpoModulesCore;
 };
 
 const createNativeViewMock = (displayName: string) => {
-  const React = require("react");
+  const React = cwdRequire("react");
   const component = ({ children, ...props }) => React.createElement(displayName, props, children);
   Object.defineProperty(component, "displayName", {
     configurable: true,
@@ -57,6 +69,11 @@ Object.defineProperty(mockNativeModules, "ExponentConstants", {
 });
 
 Object.defineProperty(mockNativeModules, "ExpoUI", {
+  configurable: true,
+  enumerable: true,
+  get: () => getExpoUINativeModule(),
+});
+Object.defineProperty(getExpoGlobal().modules, "ExpoUI", {
   configurable: true,
   enumerable: true,
   get: () => getExpoUINativeModule(),
@@ -378,7 +395,7 @@ const createExpoModulesCoreMock = () => {
       return nativeModuleMock.View;
     },
     requireOptionalNativeModule: requireMockModule,
-    useReleasingSharedObject: (factory, deps) => require("react").useMemo(factory, deps),
+    useReleasingSharedObject: (factory, deps) => cwdRequire("react").useMemo(factory, deps),
     uuid: ExpoModulesCore.uuid ?? {
       v4: jest.fn(() => "00000000-0000-4000-8000-000000000000"),
     },
@@ -389,25 +406,67 @@ let expoModulesCoreMock: any;
 const getExpoModulesCoreMock = () => (expoModulesCoreMock ??= createExpoModulesCoreMock());
 
 mock.module("expo-modules-core", () => getExpoModulesCoreMock());
+mock.module("expo-modules-core/src/index", () => getExpoModulesCoreMock());
+mock.module("expo-modules-core/src/index.ts", () => getExpoModulesCoreMock());
+try {
+  mock.module(require.resolve("expo-modules-core"), () => getExpoModulesCoreMock());
+} catch {}
+try {
+  mock.module(cwdRequire.resolve("expo-modules-core"), () => getExpoModulesCoreMock());
+} catch {}
 
-mock.module("expo", () => {
-  const Expo = require("actual:expo");
+const createExpoMock = () => {
+  const React = cwdRequire("react");
   const ExpoModulesCore = getExpoModulesCoreMock();
   return {
     __esModule: true,
-    ...Expo,
+    CodedError: ExpoModulesCore.CodedError,
     EventEmitter: ExpoModulesCore.EventEmitter,
+    LegacyEventEmitter: ExpoModulesCore.LegacyEventEmitter,
     NativeModule: ExpoModulesCore.NativeModule,
+    NativeModulesProxy: ExpoModulesCore.NativeModulesProxy,
+    PermissionStatus: ExpoModulesCore.PermissionStatus,
+    Platform: ExpoModulesCore.Platform,
     SharedObject: ExpoModulesCore.SharedObject,
     SharedRef: ExpoModulesCore.SharedRef,
+    UnavailabilityError: ExpoModulesCore.UnavailabilityError,
+    createPermissionHook: ExpoModulesCore.createPermissionHook,
+    disableErrorHandling: jest.fn(),
+    getExpoGoProjectConfig: jest.fn(() => null),
     installOnUIRuntime: ExpoModulesCore.installOnUIRuntime,
+    isRunningInExpoGo: jest.fn(() => false),
+    registerRootComponent: jest.fn(),
     registerWebModule: ExpoModulesCore.registerWebModule,
     reloadAppAsync: ExpoModulesCore.reloadAppAsync,
     requireNativeModule: ExpoModulesCore.requireNativeModule,
     requireNativeView: ExpoModulesCore.requireNativeViewManager,
     requireNativeViewManager: ExpoModulesCore.requireNativeViewManager,
     requireOptionalNativeModule: ExpoModulesCore.requireOptionalNativeModule,
+    useEvent: jest.fn((eventEmitter, eventName, listener) => {
+      React.useEffect(() => {
+        const subscription = eventEmitter?.addListener?.(eventName, listener);
+        return () => subscription?.remove?.();
+      }, [eventEmitter, eventName, listener]);
+    }),
+    useEventListener: jest.fn((eventEmitter, eventName, listener) => {
+      React.useEffect(() => {
+        const subscription = eventEmitter?.addListener?.(eventName, listener);
+        return () => subscription?.remove?.();
+      }, [eventEmitter, eventName, listener]);
+    }),
   };
+};
+
+mock.module("expo", () => {
+  return createExpoMock();
 });
+mock.module("expo/src/Expo", () => createExpoMock());
+mock.module("expo/src/Expo.ts", () => createExpoMock());
+try {
+  mock.module(require.resolve("expo"), () => createExpoMock());
+} catch {}
+try {
+  mock.module(cwdRequire.resolve("expo"), () => createExpoMock());
+} catch {}
 
 installExpoFileSystemModuleMocks();
