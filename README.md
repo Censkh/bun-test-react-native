@@ -30,6 +30,8 @@ React Native packages assume Metro, Jest, native modules, platform-specific file
 
 ## Supported Packages
 
+Supports Expo SDK 56+ and React Native 0.57+ test environments.
+
 `bun-test-react-native/setup` includes built-in test support for:
 
 - `react-native`
