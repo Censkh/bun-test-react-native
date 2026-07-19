@@ -1,9 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import { transpile } from "../src/plugin";
 
-const require = createRequire(import.meta.url);
 
 describe("React Native module transpile", () => {
   test("exports properties assigned to an ESM default export as named exports", () => {

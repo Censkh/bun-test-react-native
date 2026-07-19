@@ -1,9 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import { transpile } from "../src/plugin";
 
-const require = createRequire(import.meta.url);
 
 describe("React Native Jest preset transpile", () => {
   test("strips Flow generics from View mock", () => {

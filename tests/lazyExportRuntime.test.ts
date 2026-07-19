@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -9,7 +8,6 @@ import { Window } from "happy-dom";
 import React from "react";
 import { transpile } from "../src/plugin";
 
-const require = createRequire(import.meta.url);
 const testRoots: string[] = [];
 
 const createTestRoot = () => {

@@ -1,7 +1,4 @@
 import { mock } from "bun:test";
-import { createRequire } from "node:module";
-
-const require = createRequire(import.meta.url);
 
 const formDataModule = {
   installFormDataPatch: <T extends typeof FormData>(formData: T): T => formData,

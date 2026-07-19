@@ -1,10 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import path from "node:path";
 import { hasExtensionlessPlatformSpecifier, rewriteExtensionlessPlatformSpecifiers, transpile } from "../src/plugin";
 
-const require = createRequire(import.meta.url);
 
 describe("react-native-screens transpile", () => {
   test("rewrites extensionless CJS requires to platform files", () => {

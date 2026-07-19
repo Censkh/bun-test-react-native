@@ -1,9 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import { hasCjsDynamicExport, transpile } from "../src/plugin";
 
-const require = createRequire(import.meta.url);
 
 describe("CommonJS dynamic export detection", () => {
   test("ignores literal Object.defineProperty export getters", () => {

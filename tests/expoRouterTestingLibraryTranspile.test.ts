@@ -1,9 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import { getReactNativeTransformations, transpile } from "../src/plugin";
 
-const require = createRequire(import.meta.url);
 
 describe("Expo Router testing-library transpile", () => {
   test("transpiles testing-library files", () => {

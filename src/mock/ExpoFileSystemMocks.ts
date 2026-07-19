@@ -1,8 +1,6 @@
 import { jest, mock } from "bun:test";
-import { createRequire } from "node:module";
 import path from "node:path";
 
-const require = createRequire(import.meta.url);
 const expoFileSystemPackageRoot = path.dirname(require.resolve("expo-file-system/package.json"));
 const expoFileSystemMockPath = path.join(expoFileSystemPackageRoot, "mocks/FileSystem.ts");
 const expoFileSystemMockPathWithoutExtension = expoFileSystemMockPath.replace(/\.ts$/, "");

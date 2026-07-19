@@ -2,11 +2,9 @@ import "bun-test-react-native/setup";
 
 import { afterEach, mock } from "bun:test";
 import { Blob, File } from "node:buffer";
-import { createRequire } from "node:module";
 import { performance } from "node:perf_hooks";
 import { TextDecoder, TextEncoder } from "node:util";
 
-const require = createRequire(import.meta.url);
 const jest = globalThis.jest;
 const { notifyManager } = require("@tanstack/query-core");
 const { act, cleanup } = require("@testing-library/react-native");

@@ -8,12 +8,11 @@ import {
   getExponentFileSystemNativeModule,
   installExpoFileSystemModuleMocks,
 } from "./ExpoFileSystemMocks";
-import { getImageLoaderNativeModule } from "./ExpoImageMocks";
+import { getExpoImageNativeModule, getImageLoaderNativeModule } from "./ExpoImageMocks";
 import { getExpoMediaLibraryNativeModule, getExpoMediaLibraryNextNativeModule } from "./ExpoMediaLibraryMocks";
 import { createExpoUIViewMock, getExpoUINativeModule } from "./ExpoUIMocks";
 import { reactNativeNativeModules } from "./ReactNativeMocks";
 
-const require = createRequire(import.meta.url);
 const cwdRequire = createRequire(path.join(process.cwd(), "__bun_test_react_native__.js"));
 const mockNativeModules = reactNativeNativeModules;
 process.env.EXPO_OS ??= "ios";
@@ -55,6 +54,24 @@ const mockImageLoader = {
 
 Object.defineProperty(mockNativeModules, "ImageLoader", mockImageLoader);
 Object.defineProperty(mockNativeModules, "ImageViewManager", mockImageLoader);
+
+Object.defineProperty(getExpoGlobal().modules, "ExpoImage", {
+  configurable: true,
+  enumerable: true,
+  get: () => getExpoImageNativeModule(),
+});
+
+mock.module("expo-image/src/ImageModule", () => ({
+  __esModule: true,
+  default: getExpoImageNativeModule(),
+}));
+
+mock.module("expo-image", () => {
+  const Image = Object.assign(createNativeViewMock("ViewManagerAdapter_ExpoImage"), {
+    ...getExpoImageNativeModule(),
+  });
+  return { __esModule: true, Image, default: Image };
+});
 
 Object.defineProperty(mockNativeModules, "LinkingManager", {
   configurable: true,
