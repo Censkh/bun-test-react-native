@@ -5,27 +5,30 @@ import path from "node:path";
 const cwdRequire = createRequire(path.join(process.cwd(), "__bun_test_react_native__.js"));
 
 declare global {
-  var __DEV__: boolean | undefined;
   var __REACT_DEVTOOLS_GLOBAL_HOOK__: unknown;
   var IS_REACT_ACT_ENVIRONMENT: boolean | undefined;
   var IS_REACT_NATIVE_TEST_ENVIRONMENT: boolean | undefined;
   var nativeModuleProxy: Record<string, unknown> | undefined;
   var __turboModuleProxy: ((name: string) => unknown) | undefined;
-  var ErrorUtils:
-    | {
-        applyWithGuard: <T>(fun: () => T) => T | undefined;
-        applyWithGuardIfNeeded: <T>(fun: () => T) => T | undefined;
-        getGlobalHandler: () => (error: unknown, isFatal?: boolean) => void;
-        guard: <T extends (...args: unknown[]) => unknown>(fun: T) => T;
-        inGuard: () => boolean;
-        reportError: (error: unknown) => void;
-        reportFatalError: (error: unknown) => void;
-        setGlobalHandler: (handler: (error: unknown, isFatal?: boolean) => void) => void;
-      }
-    | undefined;
+
   var nativeFabricUIManager: object | undefined;
   var regeneratorRuntime: unknown;
 }
+
+type ErrorUtilsGlobal = {
+  applyWithGuard: <ReturnValue>(fun: () => ReturnValue) => ReturnValue | undefined;
+  applyWithGuardIfNeeded: <ReturnValue>(fun: () => ReturnValue) => ReturnValue;
+  getGlobalHandler: () => (error: unknown, isFatal?: boolean) => void;
+  guard: <FunctionValue extends (...args: never[]) => unknown>(fun: FunctionValue) => FunctionValue;
+  inGuard: () => boolean;
+  reportError: (error: unknown) => void;
+  reportFatalError: (error: unknown) => void;
+  setGlobalHandler: (handler: (error: unknown, isFatal?: boolean) => void) => void;
+};
+
+const reactNativeGlobal = globalThis as typeof globalThis & {
+  ErrorUtils?: ErrorUtilsGlobal;
+};
 
 const SUPPORTED_REACT_NATIVE_JEST_MOCKS = new Set([
   "AccessibilityInfo",
@@ -64,7 +67,7 @@ globalThis.IS_REACT_NATIVE_TEST_ENVIRONMENT = true;
 let errorHandler: (error: unknown, isFatal?: boolean) => void = (error: unknown) => {
   throw error;
 };
-globalThis.ErrorUtils ??= {
+reactNativeGlobal.ErrorUtils ??= {
   applyWithGuard: (fun) => {
     try {
       return fun();

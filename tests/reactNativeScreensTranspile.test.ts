@@ -3,7 +3,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { hasExtensionlessPlatformSpecifier, rewriteExtensionlessPlatformSpecifiers, transpile } from "../src/plugin";
 
-
 describe("react-native-screens transpile", () => {
   test("rewrites extensionless CJS requires to platform files", () => {
     const packageRoot = path.dirname(require.resolve("react-native-screens/package.json"));

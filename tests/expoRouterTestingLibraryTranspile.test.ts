@@ -2,7 +2,6 @@ import { describe, expect, test } from "bun:test";
 import fs from "node:fs";
 import { getReactNativeTransformations, transpile } from "../src/plugin";
 
-
 describe("Expo Router testing-library transpile", () => {
   test("transpiles testing-library files", () => {
     const files = [

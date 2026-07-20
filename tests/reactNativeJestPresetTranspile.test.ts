@@ -2,7 +2,6 @@ import { describe, expect, test } from "bun:test";
 import fs from "node:fs";
 import { transpile } from "../src/plugin";
 
-
 describe("React Native Jest preset transpile", () => {
   test("strips Flow generics from View mock", () => {
     const viewMockPath = require.resolve("@react-native/jest-preset/jest/mocks/View.js");
