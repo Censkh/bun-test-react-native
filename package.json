@@ -39,10 +39,10 @@
     "undici": "^8.5.0"
   },
   "devDependencies": {
-    "@swc/core": "^1.15.43",
+    "@swc/core": "^1.15.46",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^26.1.1",
-    "expo-modules-core": "^57.0.3",
+    "expo-modules-core": "^57.0.6",
     "react-native": "0.86.0",
     "react-native-gesture-handler-2": "npm:react-native-gesture-handler@2.31.2",
     "typescript": "7.0.2"
