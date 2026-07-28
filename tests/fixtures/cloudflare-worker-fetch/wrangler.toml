@@ -3,6 +3,10 @@ main = "src/worker.ts"
 compatibility_date = "2025-08-15"
 compatibility_flags = ["nodejs_compat"]
 
+[[rules]]
+type = "Data"
+globs = ["**/*.jpg"]
+
 [images]
 binding = "IMAGES"
 
