@@ -1,7 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 import testImage from "./test-image.jpg";
 
-
 type Env = {
   APP_EVENTS: DurableObjectNamespace<AppEvents>;
   IMAGES: ImagesBinding;
