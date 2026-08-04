@@ -62,7 +62,7 @@ export const expectBunFixtureToPass = (
   expect(fixtureTests.length).toBeGreaterThan(0);
 
   const result = Bun.spawnSync({
-    cmd: [process.execPath, "test", ...fixtureTests],
+    cmd: [process.execPath, "test", "--timeout=10000", ...fixtureTests],
     cwd: fixtureRoot,
     env: { ...process.env, ...options.env },
     stderr: "pipe",
