@@ -5,10 +5,16 @@ const createReanimatedUseHandlerMock = () => ({
   doDependenciesDiffer: true,
 });
 
-const createReanimatedUseComposedEventHandlerMock =
-  (useEvent: unknown) => (handlers: Array<((event: unknown) => void) | null>) => {
-    if (typeof useEvent === "function") {
-      return useEvent(
+const createReanimatedUseComposedEventHandlerMock = (reanimatedUseEvent: unknown) => {
+  const composeHandlers = (handlers: Array<((event: unknown) => void) | null>) => (event: unknown) => {
+    for (const handler of handlers) {
+      handler?.(event);
+    }
+  };
+
+  if (typeof reanimatedUseEvent === "function") {
+    return (handlers: Array<((event: unknown) => void) | null>) =>
+      reanimatedUseEvent(
         (event: unknown) => {
           for (const handler of handlers) {
             handler?.(event);
@@ -17,14 +23,10 @@ const createReanimatedUseComposedEventHandlerMock =
         [],
         true,
       );
-    }
+  }
 
-    return (event: unknown) => {
-      for (const handler of handlers) {
-        handler?.(event);
-      }
-    };
-  };
+  return composeHandlers;
+};
 
 const isReanimatedSharedValue = (value: unknown) => typeof value === "object" && value !== null && "value" in value;
 
