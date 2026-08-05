@@ -10,6 +10,7 @@ import {
 } from "./ExpoFileSystemMocks";
 import { getExpoImageNativeModule, getImageLoaderNativeModule } from "./ExpoImageMocks";
 import { getExpoMediaLibraryNativeModule, getExpoMediaLibraryNextNativeModule } from "./ExpoMediaLibraryMocks";
+import { getExpoModuleMock } from "./ExpoPresetModuleMocks";
 import { createExpoUIViewMock, getExpoUINativeModule } from "./ExpoUIMocks";
 import { reactNativeNativeModules } from "./ReactNativeMocks";
 
@@ -27,6 +28,18 @@ const getExpoGlobal = () => {
   });
   return expoGlobal;
 };
+
+const expoModulesCoreJsLogger = getExpoModuleMock("ExpoModulesCoreJSLogger");
+Object.defineProperty(getExpoGlobal().modules, "ExpoModulesCoreJSLogger", {
+  configurable: true,
+  enumerable: true,
+  value: expoModulesCoreJsLogger,
+});
+Object.defineProperty(mockNativeModules, "ExpoModulesCoreJSLogger", {
+  configurable: true,
+  enumerable: true,
+  value: expoModulesCoreJsLogger,
+});
 
 let actualExpoModulesCore: any;
 const getActualExpoModulesCore = () => {
@@ -73,11 +86,13 @@ mock.module("expo-image", () => {
   return { __esModule: true, Image, default: Image };
 });
 
-Object.defineProperty(mockNativeModules, "LinkingManager", {
-  configurable: true,
-  enumerable: true,
-  get: () => mockNativeModules.Linking,
-});
+if (!mockNativeModules.LinkingManager) {
+  Object.defineProperty(mockNativeModules, "LinkingManager", {
+    configurable: true,
+    enumerable: true,
+    get: () => mockNativeModules.Linking,
+  });
+}
 
 Object.defineProperty(mockNativeModules, "ExponentConstants", {
   configurable: true,
@@ -119,72 +134,6 @@ Object.defineProperty(mockNativeModules, "ExpoMediaLibrary", {
   enumerable: true,
   get: () => getExpoMediaLibraryNativeModule(),
 });
-
-const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
-const mergeExpoModuleDefinitions = (target: Record<string, unknown>, source: Record<string, unknown>) => {
-  for (const [key, value] of Object.entries(source)) {
-    const existing = target[key];
-    target[key] =
-      isPlainObject(existing) && isPlainObject(value) ? mergeExpoModuleDefinitions({ ...existing }, value) : value;
-  }
-  return target;
-};
-
-let expoModules: Record<string, unknown> | undefined;
-const getExpoModules = () => {
-  expoModules ??= mergeExpoModuleDefinitions(
-    mergeExpoModuleDefinitions(
-      require("jest-expo/src/preset/moduleMocks/expoModules"),
-      require("jest-expo/src/preset/moduleMocks/thirdPartyModules"),
-    ),
-    require("jest-expo/src/preset/moduleMocks/internalExpoModules"),
-  );
-  return expoModules;
-};
-
-const mockProperty = (property, customMock) => {
-  if (customMock !== undefined) return customMock;
-  if (property.type === "function") {
-    return property.functionType === "promise" ? jest.fn(() => Promise.resolve()) : jest.fn();
-  }
-  if (property.type === "number") return 1;
-  if (property.type === "string") return "mock";
-  if (property.type === "array") return [];
-  if (property.type === "mock") return mockByMockDefinition(property.mockDefinition);
-  return property.mock ?? {};
-};
-
-const mockProperties = (moduleProperties, customMocks = {}) => {
-  const mockedProperties = {};
-  for (const propertyName of Object.keys(moduleProperties)) {
-    const property = moduleProperties[propertyName];
-    const customMock =
-      customMocks && Object.hasOwn(customMocks, propertyName) ? customMocks[propertyName] : property.mock;
-    mockedProperties[propertyName] = mockProperty(property, customMock);
-  }
-  return mockedProperties;
-};
-
-function mockByMockDefinition(definition) {
-  const mock = {};
-  for (const key of Object.keys(definition)) {
-    mock[key] = mockProperties(definition[key]);
-  }
-  return mock;
-}
-
-const expoModuleMockCache = new Map<string, unknown>();
-
-const getExpoModuleMock = (moduleName: string) => {
-  if (expoModuleMockCache.has(moduleName)) return expoModuleMockCache.get(moduleName);
-  const moduleDefinition = getExpoModules()[moduleName];
-  if (!moduleDefinition) return undefined;
-  const mockedProperties = mockProperties(moduleDefinition);
-  expoModuleMockCache.set(moduleName, mockedProperties);
-  return mockedProperties;
-};
 
 Object.defineProperty(mockNativeModules, "NativeUnimoduleProxy", {
   configurable: true,
@@ -313,6 +262,9 @@ const createExpoModulesCoreMock = () => {
     SharedRef = class SharedRef {},
   } = globalThis.expo ?? {};
   const { NativeModulesProxy = {} } = ExpoModulesCore;
+  NativeModulesProxy.ExpoModulesCoreJSLogger ??= {};
+  NativeModulesProxy.ExpoModulesCoreJSLogger.addListener ??= jest.fn();
+  NativeModulesProxy.ExpoModulesCoreJSLogger.removeListeners ??= jest.fn();
 
   for (const moduleName of Object.keys(NativeModulesProxy)) {
     const nativeModule = NativeModulesProxy[moduleName];

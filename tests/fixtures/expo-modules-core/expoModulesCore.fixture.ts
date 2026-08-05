@@ -10,6 +10,16 @@ describe("expo-modules-core", () => {
     expect(typeof expoModulesCore.requireNativeModule).toBe("function");
   });
 
+  test("resolves supported modules and rejects missing required modules", async () => {
+    const expoModulesCore = await import("expo-modules-core");
+
+    expect(expoModulesCore.requireOptionalNativeModule("MissingExpoModule")).toBeNull();
+    expect(() => expoModulesCore.requireNativeModule("MissingExpoModule")).toThrow(
+      "Cannot find native module 'MissingExpoModule'",
+    );
+    expect(expoModulesCore.requireNativeModule("ExpoGlassEffect")).toBeDefined();
+  });
+
   test("keeps fetch usable after Expo Winter runtime installs globals", async () => {
     await import("expo/src/winter");
 

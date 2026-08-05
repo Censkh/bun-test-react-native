@@ -1,8 +1,56 @@
 import { jest, mock } from "bun:test";
+import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
+import {
+  createComponentMock,
+  createModalMock,
+  createNativeComponent,
+  createRefreshControlMock,
+  createScrollViewMock,
+  nativeMethods,
+} from "./ReactNativeComponentMocks";
+import {
+  createAccessibilityInfoMock,
+  createAppStateMock,
+  createClipboardMock,
+  createLinkingMock,
+  createVibrationMock,
+} from "./ReactNativeModuleMocks";
 
 const cwdRequire = createRequire(path.join(process.cwd(), "__bun_test_react_native__.js"));
+
+const getReactNativeInstallations = () => {
+  const installations = new Set<string>();
+  for (const startDirectory of [process.cwd(), import.meta.dir]) {
+    for (let directory = startDirectory; path.dirname(directory) !== directory; directory = path.dirname(directory)) {
+      const installation = path.join(directory, "node_modules", "react-native");
+      if (fs.existsSync(installation)) installations.add(installation);
+    }
+  }
+  return installations;
+};
+
+const mockReactNativeModule = (moduleName: string, factory: () => unknown) => {
+  mock.module(moduleName, factory);
+
+  for (const resolve of [require.resolve, cwdRequire.resolve]) {
+    try {
+      const resolvedPath = resolve(moduleName);
+      mock.module(resolvedPath, factory);
+      mock.module(pathToFileURL(resolvedPath).href, factory);
+    } catch {}
+  }
+
+  const relativePath = moduleName.replace(/^react-native\//, "");
+  for (const installation of getReactNativeInstallations()) {
+    const resolvedPath = path.join(installation, `${relativePath}.js`);
+    if (!fs.existsSync(resolvedPath)) continue;
+    mock.module(resolvedPath, factory);
+    mock.module(pathToFileURL(resolvedPath).href, factory);
+  }
+};
 
 declare global {
   var __REACT_DEVTOOLS_GLOBAL_HOOK__: unknown;
@@ -30,36 +78,9 @@ const reactNativeGlobal = globalThis as typeof globalThis & {
   ErrorUtils?: ErrorUtilsGlobal;
 };
 
-const SUPPORTED_REACT_NATIVE_JEST_MOCKS = new Set([
-  "AccessibilityInfo",
-  "ActivityIndicator",
-  "AppState",
-  "Clipboard",
-  "Image",
-  "InitializeCore",
-  "Linking",
-  "Modal",
-  "NativeComponentRegistry",
-  "NativeModules",
-  "RendererProxy",
-  "RefreshControl",
-  "ScrollView",
-  "Text",
-  "TextInput",
-  "UIManager",
-  "Vibration",
-  "View",
-  "ViewNativeComponent",
-  "requireNativeComponent",
-  "useColorScheme",
-]);
-
-const reactNativeJestMock = (mockPath: string) => {
-  if (!SUPPORTED_REACT_NATIVE_JEST_MOCKS.has(mockPath)) {
-    throw new Error(`Unsupported React Native Jest mock: ${mockPath}`);
-  }
-  return require(`@react-native/jest-preset/jest/mocks/${mockPath}.js`);
-};
+const withDefaultExport = (value: unknown) => ({
+  default: value,
+});
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 globalThis.IS_REACT_NATIVE_TEST_ENVIRONMENT = true;
@@ -188,37 +209,8 @@ try {
   });
 } catch {}
 
-const mockFromPreset = (moduleName: string, presetMockPath?: string) => {
-  mock.module(moduleName, () =>
-    presetMockPath ? normalizePresetMock(reactNativeJestMock(presetMockPath.replace("./mocks/", ""))) : { default: {} },
-  );
-};
-
-const mockViewNativeComponent = () => {
-  const mockModule = normalizePresetMock(reactNativeJestMock("ViewNativeComponent"));
-  return {
-    ...mockModule,
-    Commands: {
-      blur: jest.fn(),
-      focus: jest.fn(),
-      hotspotUpdate: jest.fn(),
-      setPressed: jest.fn(),
-    },
-  };
-};
-
-const normalizePresetMock = (mockModule: unknown) => {
-  if (!mockModule || typeof mockModule !== "object") {
-    return { default: mockModule };
-  }
-
-  const normalized = { ...(mockModule as Record<string, unknown>) };
-  delete normalized.__esModule;
-  normalized.default = "default" in normalized ? normalized.default : mockModule;
-  return normalized;
-};
-
-export const reactNativeNativeModules = reactNativeJestMock("NativeModules").default;
+const sharedNativeModules = require("./NativeModules").default;
+export const reactNativeNativeModules = sharedNativeModules;
 Object.defineProperties(reactNativeNativeModules, {
   __esModule: {
     configurable: true,
@@ -320,38 +312,74 @@ globalThis.__turboModuleProxy = (name: string) => {
   return previousTurboModuleProxy?.(name) ?? null;
 };
 
-mock.module("react-native/Libraries/BatchedBridge/NativeModules", () => ({
+mockReactNativeModule("react-native/Libraries/BatchedBridge/NativeModules", () => ({
   __esModule: true,
   default: reactNativeNativeModules,
 }));
-mockFromPreset("react-native/Libraries/Core/InitializeCore", "./mocks/InitializeCore");
-mockFromPreset("react-native/Libraries/Core/NativeExceptionsManager");
-mockFromPreset("react-native/Libraries/NativeComponent/NativeComponentRegistry", "./mocks/NativeComponentRegistry");
+mockReactNativeModule("react-native/Libraries/Core/InitializeCore", () => ({}));
+mockReactNativeModule("react-native/Libraries/Core/NativeExceptionsManager", () => withDefaultExport({}));
+mockReactNativeModule("react-native/Libraries/NativeComponent/NativeComponentRegistry", () => ({
+  get: jest.fn((name: string) => createNativeComponent(name)),
+  getWithFallback_DEPRECATED: jest.fn((name: string) => createNativeComponent(name)),
+  setRuntimeConfigProvider: jest.fn(),
+}));
 const mockRendererProxy = () => ({
   ...require("actual:react-native/Libraries/ReactNative/RendererImplementation"),
   findNodeHandle: jest.fn(() => 1),
 });
-mock.module("react-native/Libraries/ReactNative/RendererProxy", mockRendererProxy);
-try {
-  mock.module(require.resolve("react-native/Libraries/ReactNative/RendererProxy"), mockRendererProxy);
-} catch {}
-try {
-  mock.module(cwdRequire.resolve("react-native/Libraries/ReactNative/RendererProxy"), mockRendererProxy);
-} catch {}
-mockFromPreset("react-native/Libraries/ReactNative/requireNativeComponent", "./mocks/requireNativeComponent");
-mockFromPreset("react-native/Libraries/ReactNative/UIManager", "./mocks/UIManager");
-mock.module("react-native/Libraries/Components/View/ViewNativeComponent", mockViewNativeComponent);
-mockFromPreset("react-native/Libraries/Text/Text", "./mocks/Text");
-mockFromPreset("react-native/Libraries/Components/View/View", "./mocks/View");
-mockFromPreset("react-native/Libraries/AppState/AppState", "./mocks/AppState");
-mockFromPreset("react-native/Libraries/Components/AccessibilityInfo/AccessibilityInfo", "./mocks/AccessibilityInfo");
-mockFromPreset("react-native/Libraries/Components/ActivityIndicator/ActivityIndicator", "./mocks/ActivityIndicator");
-mockFromPreset("react-native/Libraries/Components/Clipboard/Clipboard", "./mocks/Clipboard");
-mockFromPreset("react-native/Libraries/Components/RefreshControl/RefreshControl", "./mocks/RefreshControl");
-mockFromPreset("react-native/Libraries/Components/ScrollView/ScrollView", "./mocks/ScrollView");
-mockFromPreset("react-native/Libraries/Components/TextInput/TextInput", "./mocks/TextInput");
-mockFromPreset("react-native/Libraries/Image/Image", "./mocks/Image");
-mockFromPreset("react-native/Libraries/Linking/Linking", "./mocks/Linking");
-mockFromPreset("react-native/Libraries/Modal/Modal", "./mocks/Modal");
-mockFromPreset("react-native/Libraries/Utilities/useColorScheme", "./mocks/useColorScheme");
-mockFromPreset("react-native/Libraries/Vibration/Vibration", "./mocks/Vibration");
+mockReactNativeModule("react-native/Libraries/ReactNative/RendererProxy", mockRendererProxy);
+mockReactNativeModule("react-native/Libraries/ReactNative/RendererProxy.js", mockRendererProxy);
+mockReactNativeModule("react-native/Libraries/ReactNative/requireNativeComponent", () =>
+  withDefaultExport((name: string) => createNativeComponent(name)),
+);
+mockReactNativeModule("react-native/Libraries/ReactNative/UIManager", () => withDefaultExport(reactNativeUIManager));
+mockReactNativeModule("react-native/Libraries/Components/View/ViewNativeComponent", () => ({
+  ...withDefaultExport(createNativeComponent("View")),
+  Commands: {
+    blur: jest.fn(),
+    focus: jest.fn(),
+    hotspotUpdate: jest.fn(),
+    setPressed: jest.fn(),
+  },
+}));
+mockReactNativeModule("react-native/Libraries/Text/Text", () =>
+  withDefaultExport(createComponentMock("react-native/Libraries/Text/Text", nativeMethods)),
+);
+mockReactNativeModule("react-native/Libraries/Components/View/View", () =>
+  withDefaultExport(createComponentMock("react-native/Libraries/Components/View/View", nativeMethods)),
+);
+mockReactNativeModule("react-native/Libraries/AppState/AppState", () => withDefaultExport(createAppStateMock()));
+mockReactNativeModule("react-native/Libraries/Components/AccessibilityInfo/AccessibilityInfo", () =>
+  withDefaultExport(createAccessibilityInfoMock()),
+);
+mockReactNativeModule("react-native/Libraries/Components/ActivityIndicator/ActivityIndicator", () =>
+  withDefaultExport(createComponentMock("react-native/Libraries/Components/ActivityIndicator/ActivityIndicator", null)),
+);
+mockReactNativeModule("react-native/Libraries/Components/Clipboard/Clipboard", () =>
+  withDefaultExport(createClipboardMock()),
+);
+mockReactNativeModule("react-native/Libraries/Components/RefreshControl/RefreshControl", () =>
+  withDefaultExport(createRefreshControlMock()),
+);
+mockReactNativeModule("react-native/Libraries/Components/ScrollView/ScrollView", () =>
+  withDefaultExport(createScrollViewMock()),
+);
+mockReactNativeModule("react-native/Libraries/Components/TextInput/TextInput", () =>
+  withDefaultExport(
+    createComponentMock("react-native/Libraries/Components/TextInput/TextInput", {
+      ...nativeMethods,
+      clear: jest.fn(),
+      getNativeRef: jest.fn(),
+      isFocused: jest.fn(),
+    }),
+  ),
+);
+mockReactNativeModule("react-native/Libraries/Image/Image", () =>
+  withDefaultExport(createComponentMock("react-native/Libraries/Image/Image", null)),
+);
+mockReactNativeModule("react-native/Libraries/Linking/Linking", () => withDefaultExport(createLinkingMock()));
+mockReactNativeModule("react-native/Libraries/Modal/Modal", () => withDefaultExport(createModalMock()));
+mockReactNativeModule("react-native/Libraries/Utilities/useColorScheme", () =>
+  withDefaultExport(jest.fn(() => "light")),
+);
+mockReactNativeModule("react-native/Libraries/Vibration/Vibration", () => withDefaultExport(createVibrationMock()));

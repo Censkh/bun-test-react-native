@@ -23,6 +23,13 @@ describe("real react-native package runtime compatibility", () => {
     expect(module.default).toBe("function");
   });
 
+  test("shares native modules with the actual React Native module graph", async () => {
+    const module = await import("./src/actualTurboModuleRegistry");
+
+    expect(module.appState).toBe("active");
+    expect(module.linkingManager).toBe("function");
+  });
+
   test("loads Image for CommonJS consumers", async () => {
     const module = await import("./src/image");
     expect(module.default).toBe("function");

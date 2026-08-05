@@ -1,4 +1,11 @@
 require("./mock/UndiciMocks");
+const nativeModules = require("./mock/NativeModules").default as Record<string, unknown>;
+const testGlobal = globalThis as typeof globalThis & {
+  nativeModuleProxy?: Record<string, unknown>;
+  __turboModuleProxy?: (name: string) => unknown;
+};
+testGlobal.nativeModuleProxy = nativeModules;
+testGlobal.__turboModuleProxy = (name: string) => nativeModules[name] ?? null;
 require("./plugin-entry");
 require("bun-jest-require-actual/setup");
 

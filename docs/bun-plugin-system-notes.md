@@ -26,7 +26,6 @@ import "./Thing";
 These do reach our `onResolve` filter:
 
 ```ts
-require("@react-native/jest-preset/jest/mocks/View.js");
 require("platform-select:./Thing");
 require("actual:react-native");
 ```
