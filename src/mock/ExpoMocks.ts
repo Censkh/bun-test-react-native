@@ -111,17 +111,19 @@ Object.defineProperty(getExpoGlobal().modules, "ExpoUI", {
   get: () => getExpoUINativeModule(),
 });
 
-Object.defineProperty(mockNativeModules, "FileSystem", {
-  configurable: true,
-  enumerable: true,
-  get: () => getExpoFileSystemNativeModule(),
-});
+if (installExpoFileSystemModuleMocks()) {
+  Object.defineProperty(mockNativeModules, "FileSystem", {
+    configurable: true,
+    enumerable: true,
+    get: () => getExpoFileSystemNativeModule(),
+  });
 
-Object.defineProperty(mockNativeModules, "ExponentFileSystem", {
-  configurable: true,
-  enumerable: true,
-  get: () => getExponentFileSystemNativeModule(),
-});
+  Object.defineProperty(mockNativeModules, "ExponentFileSystem", {
+    configurable: true,
+    enumerable: true,
+    get: () => getExponentFileSystemNativeModule(),
+  });
+}
 
 Object.defineProperty(mockNativeModules, "ExpoMediaLibraryNext", {
   configurable: true,
@@ -437,5 +439,3 @@ try {
 try {
   mock.module(cwdRequire.resolve("expo"), () => createExpoMock());
 } catch {}
-
-installExpoFileSystemModuleMocks();

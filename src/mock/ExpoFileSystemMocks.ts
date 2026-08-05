@@ -1,9 +1,21 @@
 import { jest, mock } from "bun:test";
+import { createRequire } from "node:module";
 import path from "node:path";
 
-const expoFileSystemPackageRoot = path.dirname(require.resolve("expo-file-system/package.json"));
-const expoFileSystemMockPath = path.join(expoFileSystemPackageRoot, "mocks/FileSystem.ts");
-const expoFileSystemMockPathWithoutExtension = expoFileSystemMockPath.replace(/\.ts$/, "");
+const fixtureRequire = createRequire(path.join(process.cwd(), "__bun_test_react_native__.js"));
+
+const getExpoFileSystemMockPaths = () => {
+  try {
+    const packageRoot = path.dirname(fixtureRequire.resolve("expo-file-system/package.json"));
+    const mockPath = path.join(packageRoot, "mocks/FileSystem.ts");
+    return {
+      mockPath,
+      mockPathWithoutExtension: mockPath.replace(/\.ts$/, ""),
+    };
+  } catch {
+    return null;
+  }
+};
 
 let expoFileSystemNativeModule: any;
 let exponentFileSystemNativeModule: any;
@@ -134,12 +146,13 @@ const createFileBackedFileSystemModule = (fileSystem: any) => {
 };
 
 export const getExpoFileSystemNativeModule = () => {
-  expoFileSystemNativeModule ??= createFileBackedFileSystemModule(require(`actual:${expoFileSystemMockPath}`));
+  const mockPaths = getExpoFileSystemMockPaths();
+  if (!mockPaths) {
+    throw new Error("expo-file-system is not installed in this test fixture");
+  }
+  expoFileSystemNativeModule ??= createFileBackedFileSystemModule(require(`actual:${mockPaths.mockPath}`));
   return expoFileSystemNativeModule;
 };
-
-mock.module(expoFileSystemMockPath, () => getExpoFileSystemNativeModule());
-mock.module(expoFileSystemMockPathWithoutExtension, () => getExpoFileSystemNativeModule());
 
 type DeletingOptions = {
   idempotent?: boolean;
@@ -226,6 +239,11 @@ export const getExponentFileSystemNativeModule = () => {
 };
 
 export const installExpoFileSystemModuleMocks = () => {
+  const mockPaths = getExpoFileSystemMockPaths();
+  if (!mockPaths) return false;
+
+  mock.module(mockPaths.mockPath, () => getExpoFileSystemNativeModule());
+  mock.module(mockPaths.mockPathWithoutExtension, () => getExpoFileSystemNativeModule());
   mock.module("expo-file-system", () => ({
     ...require("actual:expo-file-system"),
     __esModule: true,
@@ -240,4 +258,5 @@ export const installExpoFileSystemModuleMocks = () => {
       ...legacyNativeModule,
     };
   });
+  return true;
 };
