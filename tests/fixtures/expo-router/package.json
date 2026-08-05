@@ -6,6 +6,7 @@
     "expo-constants": "~56.0.18",
     "expo-linking": "~56.0.14",
     "expo-router": "~56.2.11",
+    "jest-expo": "~56.0.0",
     "react": "19.2.3",
     "react-native": "0.85.3",
     "react-native-gesture-handler": "2.31.2",

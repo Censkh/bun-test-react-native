@@ -1,3 +1,23 @@
+import { projectRequire } from "./ProjectRequire";
+
+const warnWhenExpoJestDefinitionsAreMissing = () => {
+  try {
+    projectRequire.resolve("expo/package.json");
+  } catch {
+    return;
+  }
+
+  try {
+    projectRequire.resolve("jest-expo/package.json");
+  } catch {
+    console.warn(
+      "[bun-test-react-native] Expo is installed but jest-expo is not. Install jest-expo at the matching Expo SDK version to provide native-module definitions.",
+    );
+  }
+};
+
+warnWhenExpoJestDefinitionsAreMissing();
+
 require("./mock/UndiciMocks");
 const nativeModules = require("./mock/NativeModules").default as Record<string, unknown>;
 const testGlobal = globalThis as typeof globalThis & {

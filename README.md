@@ -13,6 +13,12 @@ Preload the package test setup before app-specific test setup:
 preload = ["bun-test-react-native/setup"]
 ```
 
+Expo projects must also install `jest-expo` at the matching Expo SDK major version. `bun-test-react-native` uses its native-module definitions; it does not run Jest or use the Jest preset.
+
+```sh
+bun add --dev jest-expo@~57.0.0
+```
+
 ## What It Does
 
 React Native packages assume Metro, Jest, native modules, platform-specific files, and Flow syntax. Bun does not provide those behaviors by default, so this package adds the missing compatibility layer in two parts.
@@ -47,6 +53,7 @@ Supports Expo SDK 56+ and React Native 0.57+ test environments.
 - `@expo/ui`
 - `expo-font`
 - `expo-constants`
+- `expo-web-browser`, through `jest-expo` native-module definitions
 - `@react-native-firebase/app`
 - `@react-native-firebase/auth`
 - `@react-native-firebase/messaging`
