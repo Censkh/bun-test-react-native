@@ -45,6 +45,7 @@ describe("Cloudflare worker fetch", () => {
             config: path.join(process.cwd(), "wrangler.toml"),
             dev: {
               inspector: false,
+              persist: false,
               remote: false,
               server: { hostname: "127.0.0.1", port: 0 },
             },

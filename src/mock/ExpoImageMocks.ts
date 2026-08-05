@@ -1,4 +1,5 @@
 import { jest } from "bun:test";
+import { projectRequire } from "../ProjectRequire";
 
 const imageCache = new Map<string, string>();
 
@@ -7,7 +8,7 @@ export const getImageLoaderNativeModule = () => ({
   prefetchImage: jest.fn(),
   getCachePathAsync: jest.fn(async (key: string) => imageCache.get(key) ?? null),
   writeToCacheAsync: jest.fn(async (source: string, key: string) => {
-    const { File, Paths } = require("expo-file-system");
+    const { File, Paths } = projectRequire("expo-file-system");
     const cacheFile = new File(Paths.cache, `expo-image-${encodeURIComponent(key)}`);
     cacheFile.write(await new File(source).bytes());
     imageCache.set(key, cacheFile.uri);

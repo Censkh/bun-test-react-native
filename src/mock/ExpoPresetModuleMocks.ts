@@ -1,4 +1,5 @@
 import { jest } from "bun:test";
+import { projectRequire } from "../ProjectRequire";
 import { expoModuleMocks } from "./ExpoModuleMocks";
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
@@ -19,10 +20,10 @@ const getPresetDefinitions = () => {
   try {
     presetDefinitions = mergeDefinitions(
       mergeDefinitions(
-        require("jest-expo/src/preset/moduleMocks/expoModules"),
-        require("jest-expo/src/preset/moduleMocks/thirdPartyModules"),
+        projectRequire("jest-expo/src/preset/moduleMocks/expoModules"),
+        projectRequire("jest-expo/src/preset/moduleMocks/thirdPartyModules"),
       ),
-      require("jest-expo/src/preset/moduleMocks/internalExpoModules"),
+      projectRequire("jest-expo/src/preset/moduleMocks/internalExpoModules"),
     );
   } catch {
     presetDefinitions = null;

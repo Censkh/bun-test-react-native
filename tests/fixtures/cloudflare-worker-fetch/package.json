@@ -4,6 +4,9 @@
   "type": "module",
   "devDependencies": {
     "api-def": "0.15.0-alpha.2",
+    "expo": "~56.0.12",
+    "react": "19.2.3",
+    "react-native": "0.85.3",
     "typescript": "7.0.1-rc",
     "wrangler": "4.101.0"
   }
