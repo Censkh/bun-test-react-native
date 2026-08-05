@@ -10,7 +10,7 @@ const reactNativeVersionFixtures = [
 describe("react-native version compatibility fixtures", () => {
   for (const [version, fixtureRoot] of reactNativeVersionFixtures) {
     test(`passes with react-native ${version}`, () => {
-      expectBunFixtureToPass(fixtureRoot, { installMode: "full" });
+      expectBunFixtureToPass(fixtureRoot);
     }, 30_000);
   }
 });

@@ -1,3 +1,3 @@
-import "bun-test-react-native/setup";
+import "../../../src/setup";
 
 await import("@shopify/react-native-skia/jestSetup.mjs");

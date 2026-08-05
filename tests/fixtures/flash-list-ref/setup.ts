@@ -1,3 +1,3 @@
-import "bun-test-react-native/setup";
+import "../../../src/setup";
 
 require("@shopify/flash-list/jestSetup");

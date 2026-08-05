@@ -24,24 +24,14 @@ const findFixtureTests = (fixtureRoot: string): string[] => {
 
 export const expectBunFixtureToPass = (
   fixtureRoot: string,
-  options: { env?: NodeJS.ProcessEnv; installMode?: "full" | "lockfile"; logOutput?: boolean } = {},
+  options: { env?: NodeJS.ProcessEnv; logOutput?: boolean } = {},
 ) => {
   const start = performance.now();
   const packageJsonPath = path.join(fixtureRoot, "package.json");
-  if (fs.existsSync(packageJsonPath)) {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
-    const dependencySpecs = Object.values({
-      ...packageJson.dependencies,
-      ...packageJson.devDependencies,
-    });
-    const hasFileDependency = dependencySpecs.some(
-      (specifier) => typeof specifier === "string" && specifier.startsWith("file:"),
-    );
-    const shouldInstallNodeModules = options.installMode === "full" || hasFileDependency;
+  const fixtureNodeModulesPath = path.join(fixtureRoot, "node_modules");
+  if (fs.existsSync(packageJsonPath) && !fs.existsSync(fixtureNodeModulesPath)) {
     const installResult = Bun.spawnSync({
-      cmd: shouldInstallNodeModules
-        ? [process.execPath, "install", "--no-save"]
-        : [process.execPath, "install", "--no-save", "--lockfile-only"],
+      cmd: [process.execPath, "install", "--no-save"],
       cwd: fixtureRoot,
       env: { ...process.env, ...options.env },
       stderr: "pipe",

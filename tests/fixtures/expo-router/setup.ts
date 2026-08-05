@@ -1,4 +1,4 @@
-import "bun-test-react-native/setup";
+import "../../../src/setup";
 
 jest.mock("@jest/globals", () => ({
   expect: globalThis.expect,

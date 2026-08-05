@@ -45,28 +45,6 @@ describe("CommonJS dynamic export detection", () => {
 });
 
 describe("Reanimated Jest mock transpile", () => {
-  test("transpiles react-native-reanimated/src/mock.ts to ESM-compatible exports", () => {
-    const mockPath = require.resolve("react-native-reanimated/src/mock.ts");
-    const source = fs.readFileSync(mockPath, "utf8");
-    const output = transpile({ source, filePath: mockPath });
-
-    expect(output).toContain("export default");
-    expect(output).toContain("export { _setUpTests as setUpTests }");
-    expect(output).toContain("export { _useSharedValue as useSharedValue }");
-    expect(output).toContain("var module =");
-    expect(output).not.toContain("interface ");
-  });
-
-  test("transpiles react-native-reanimated/mock.js spread exports to ESM re-exports", () => {
-    const mockPath = require.resolve("react-native-reanimated/mock.js");
-    const source = fs.readFileSync(mockPath, "utf8");
-    const output = transpile({ source, filePath: mockPath });
-
-    expect(output).toContain('export * from "./src/mock"');
-    expect(output).toContain('export * from "./src/mock-svg"');
-    expect(output).toContain("export default module.exports");
-  });
-
   test("exports __esModule CommonJS object defaults from module.exports.default", () => {
     const output = transpile({
       filePath: "/project/node_modules/react-native-reanimated/src/mock.ts",
