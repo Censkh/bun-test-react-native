@@ -1,4 +1,5 @@
 import { jest, mock } from "bun:test";
+import { projectRequire } from "../ProjectRequire";
 
 const createReanimatedUseHandlerMock = () => ({
   context: {},
@@ -61,8 +62,19 @@ const normalizeReanimatedMock = (reanimated: Record<string, unknown>) => {
   };
 };
 
-mock.module("react-native-reanimated", () => normalizeReanimatedMock(require("actual:react-native-reanimated/mock")));
+const installReanimatedMocks = () => {
+  let reanimatedPath: string;
+  let reanimatedMockPath: string;
+  try {
+    reanimatedPath = projectRequire.resolve("react-native-reanimated");
+    reanimatedMockPath = projectRequire.resolve("react-native-reanimated/mock");
+  } catch {
+    return;
+  }
 
-mock.module("react-native-reanimated/mock", () =>
-  normalizeReanimatedMock(require("actual:react-native-reanimated/mock")),
-);
+  const createMock = () => normalizeReanimatedMock(require(`actual:${reanimatedMockPath}`));
+  mock.module(reanimatedPath, createMock);
+  mock.module(reanimatedMockPath, createMock);
+};
+
+installReanimatedMocks();

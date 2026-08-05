@@ -1,7 +1,7 @@
 import { jest, mock } from "bun:test";
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import path from "node:path";
+import { projectRequire } from "../ProjectRequire";
 import { getExponentConstantsNativeModule } from "./ExpoConstantsMocks";
 import {
   getExpoFileSystemNativeModule,
@@ -14,7 +14,6 @@ import { getExpoModuleMock } from "./ExpoPresetModuleMocks";
 import { createExpoUIViewMock, getExpoUINativeModule } from "./ExpoUIMocks";
 import { reactNativeNativeModules } from "./ReactNativeMocks";
 
-const cwdRequire = createRequire(path.join(process.cwd(), "__bun_test_react_native__.js"));
 const mockNativeModules = reactNativeNativeModules;
 process.env.EXPO_OS ??= "ios";
 require("actual:expo-modules-core/src/polyfill/dangerous-internal").installExpoGlobalPolyfill();
@@ -50,7 +49,7 @@ const getActualExpoModulesCore = () => {
 };
 
 const createNativeViewMock = (displayName: string) => {
-  const React = cwdRequire("react");
+  const React = projectRequire("react");
   const component = ({ children, ...props }) => React.createElement(displayName, props, children);
   Object.defineProperty(component, "displayName", {
     configurable: true,
@@ -113,6 +112,11 @@ Object.defineProperty(getExpoGlobal().modules, "ExpoUI", {
 
 if (installExpoFileSystemModuleMocks()) {
   Object.defineProperty(mockNativeModules, "FileSystem", {
+    configurable: true,
+    enumerable: true,
+    get: () => getExpoFileSystemNativeModule(),
+  });
+  Object.defineProperty(getExpoGlobal().modules, "FileSystem", {
     configurable: true,
     enumerable: true,
     get: () => getExpoFileSystemNativeModule(),
@@ -366,7 +370,7 @@ const createExpoModulesCoreMock = () => {
       return nativeModuleMock.View;
     },
     requireOptionalNativeModule: requireMockModule,
-    useReleasingSharedObject: (factory, deps) => cwdRequire("react").useMemo(factory, deps),
+    useReleasingSharedObject: (factory, deps) => projectRequire("react").useMemo(factory, deps),
     uuid: ExpoModulesCore.uuid ?? {
       v4: jest.fn(() => "00000000-0000-4000-8000-000000000000"),
     },
@@ -383,11 +387,11 @@ try {
   mock.module(require.resolve("expo-modules-core"), () => getExpoModulesCoreMock());
 } catch {}
 try {
-  mock.module(cwdRequire.resolve("expo-modules-core"), () => getExpoModulesCoreMock());
+  mock.module(projectRequire.resolve("expo-modules-core"), () => getExpoModulesCoreMock());
 } catch {}
 
 const createExpoMock = () => {
-  const React = cwdRequire("react");
+  const React = projectRequire("react");
   const ExpoModulesCore = getExpoModulesCoreMock();
   return {
     __esModule: true,
@@ -437,5 +441,5 @@ try {
   mock.module(require.resolve("expo"), () => createExpoMock());
 } catch {}
 try {
-  mock.module(cwdRequire.resolve("expo"), () => createExpoMock());
+  mock.module(projectRequire.resolve("expo"), () => createExpoMock());
 } catch {}

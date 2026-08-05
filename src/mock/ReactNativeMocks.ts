@@ -1,8 +1,8 @@
 import { jest, mock } from "bun:test";
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { projectRequire } from "../ProjectRequire";
 import {
   createComponentMock,
   createModalMock,
@@ -19,8 +19,6 @@ import {
   createVibrationMock,
 } from "./ReactNativeModuleMocks";
 
-const cwdRequire = createRequire(path.join(process.cwd(), "__bun_test_react_native__.js"));
-
 const getReactNativeInstallations = () => {
   const installations = new Set<string>();
   for (const startDirectory of [process.cwd(), import.meta.dir]) {
@@ -35,7 +33,7 @@ const getReactNativeInstallations = () => {
 const mockReactNativeModule = (moduleName: string, factory: () => unknown) => {
   mock.module(moduleName, factory);
 
-  for (const resolve of [require.resolve, cwdRequire.resolve]) {
+  for (const resolve of [require.resolve, projectRequire.resolve]) {
     try {
       const resolvedPath = resolve(moduleName);
       mock.module(resolvedPath, factory);

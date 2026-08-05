@@ -1,8 +1,5 @@
 import { jest } from "bun:test";
-import { createRequire } from "node:module";
-import path from "node:path";
-
-const cwdRequire = createRequire(path.join(process.cwd(), "__bun_test_react_native__.js"));
+import { projectRequire } from "../ProjectRequire";
 
 const textPropsByViewName: Record<string, string[]> = {
   Button: ["label"],
@@ -27,8 +24,8 @@ const textFromSpan = (span: unknown): string[] => {
 };
 
 export const createExpoUIViewMock = (displayName: string) => {
-  const React = cwdRequire("react");
-  const { Text } = cwdRequire("react-native");
+  const React = projectRequire("react");
+  const { Text } = projectRequire("react-native");
   const viewName = displayName.replace(/^ViewManagerAdapter_ExpoUI_/, "").replace(/View$/, "");
   const textPropNames = textPropsByViewName[viewName] ?? [];
   const reactNodePropNames = reactNodePropsByViewName[viewName] ?? [];

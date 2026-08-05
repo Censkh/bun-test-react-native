@@ -1,11 +1,8 @@
 import { jest, mock } from "bun:test";
-import React, { useContext } from "react";
-import { View } from "react-native";
+import { projectRequire } from "../ProjectRequire";
 
 const safeAreaInsets = { bottom: 0, left: 0, right: 0, top: 0 };
 const safeAreaFrame = { height: 640, width: 320, x: 0, y: 0 };
-const SafeAreaInsetsContext = React.createContext<typeof safeAreaInsets | null>(null);
-const SafeAreaFrameContext = React.createContext<typeof safeAreaFrame | null>(null);
 
 const netInfoState = {
   isConnected: true,
@@ -26,38 +23,54 @@ mock.module("@react-native-community/netinfo", () => ({
   default: netInfoMock,
 }));
 
-mock.module("react-native-safe-area-context", () => ({
-  SafeAreaConsumer: SafeAreaInsetsContext.Consumer,
-  SafeAreaContext: SafeAreaInsetsContext,
-  SafeAreaFrameContext,
-  SafeAreaInsetsContext,
-  SafeAreaProvider: ({
-    children,
-    initialMetrics,
-  }: {
-    children: React.ReactNode;
-    initialMetrics?: { frame?: typeof safeAreaFrame; insets?: typeof safeAreaInsets };
-  }) =>
-    React.createElement(
-      SafeAreaFrameContext.Provider,
-      { value: initialMetrics?.frame ?? safeAreaFrame },
+const installSafeAreaContextMock = () => {
+  let safeAreaContextPath: string;
+  try {
+    safeAreaContextPath = projectRequire.resolve("react-native-safe-area-context");
+  } catch {
+    return;
+  }
+
+  const React = projectRequire("react") as typeof import("react");
+  const { View } = projectRequire("react-native") as typeof import("react-native");
+  const SafeAreaInsetsContext = React.createContext<typeof safeAreaInsets | null>(null);
+  const SafeAreaFrameContext = React.createContext<typeof safeAreaFrame | null>(null);
+
+  mock.module(safeAreaContextPath, () => ({
+    SafeAreaConsumer: SafeAreaInsetsContext.Consumer,
+    SafeAreaContext: SafeAreaInsetsContext,
+    SafeAreaFrameContext,
+    SafeAreaInsetsContext,
+    SafeAreaProvider: ({
+      children,
+      initialMetrics,
+    }: {
+      children: React.ReactNode;
+      initialMetrics?: { frame?: typeof safeAreaFrame; insets?: typeof safeAreaInsets };
+    }) =>
       React.createElement(
-        SafeAreaInsetsContext.Provider,
-        { value: initialMetrics?.insets ?? safeAreaInsets },
-        children,
+        SafeAreaFrameContext.Provider,
+        { value: initialMetrics?.frame ?? safeAreaFrame },
+        React.createElement(
+          SafeAreaInsetsContext.Provider,
+          { value: initialMetrics?.insets ?? safeAreaInsets },
+          children,
+        ),
       ),
-    ),
-  SafeAreaView: View,
-  initialWindowMetrics: null,
-  initialWindowSafeAreaInsets: safeAreaInsets,
-  useSafeArea: () => useContext(SafeAreaInsetsContext) ?? safeAreaInsets,
-  useSafeAreaFrame: () => useContext(SafeAreaFrameContext) ?? safeAreaFrame,
-  useSafeAreaInsets: () => useContext(SafeAreaInsetsContext) ?? safeAreaInsets,
-  withSafeAreaInsets: <Props extends object>(Component: React.ComponentType<Props>) =>
-    function WithSafeAreaInsets(props: Props) {
-      return React.createElement(Component, {
-        ...props,
-        insets: useContext(SafeAreaInsetsContext) ?? safeAreaInsets,
-      } as Props);
-    },
-}));
+    SafeAreaView: View,
+    initialWindowMetrics: null,
+    initialWindowSafeAreaInsets: safeAreaInsets,
+    useSafeArea: () => React.useContext(SafeAreaInsetsContext) ?? safeAreaInsets,
+    useSafeAreaFrame: () => React.useContext(SafeAreaFrameContext) ?? safeAreaFrame,
+    useSafeAreaInsets: () => React.useContext(SafeAreaInsetsContext) ?? safeAreaInsets,
+    withSafeAreaInsets: <Props extends object>(Component: React.ComponentType<Props>) =>
+      function WithSafeAreaInsets(props: Props) {
+        return React.createElement(Component, {
+          ...props,
+          insets: React.useContext(SafeAreaInsetsContext) ?? safeAreaInsets,
+        } as Props);
+      },
+  }));
+};
+
+installSafeAreaContextMock();

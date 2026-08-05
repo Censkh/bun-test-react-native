@@ -64,6 +64,7 @@ export const expectBunFixtureToPass = (
   const stderr = result.stderr.toString();
   if (options.logOutput || result.exitCode !== 0) {
     console.error(`[fixture:${path.basename(fixtureRoot)}] ${duration.toFixed(1)}ms`);
+    if (result.signalCode) console.error(`signal: ${result.signalCode}`);
     if (stdout) console.error(stdout);
     if (stderr) console.error(stderr);
   }

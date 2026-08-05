@@ -1,12 +1,10 @@
 import { jest, mock } from "bun:test";
-import { createRequire } from "node:module";
 import path from "node:path";
-
-const fixtureRequire = createRequire(path.join(process.cwd(), "__bun_test_react_native__.js"));
+import { projectRequire } from "../ProjectRequire";
 
 const getExpoFileSystemMockPaths = () => {
   try {
-    const packageRoot = path.dirname(fixtureRequire.resolve("expo-file-system/package.json"));
+    const packageRoot = path.dirname(projectRequire.resolve("expo-file-system/package.json"));
     const mockPath = path.join(packageRoot, "mocks/FileSystem.ts");
     return {
       mockPath,
@@ -242,21 +240,26 @@ export const installExpoFileSystemModuleMocks = () => {
   const mockPaths = getExpoFileSystemMockPaths();
   if (!mockPaths) return false;
 
-  mock.module(mockPaths.mockPath, () => getExpoFileSystemNativeModule());
-  mock.module(mockPaths.mockPathWithoutExtension, () => getExpoFileSystemNativeModule());
-  mock.module("expo-file-system", () => ({
-    ...require("actual:expo-file-system"),
+  const expoFileSystemPath = projectRequire.resolve("expo-file-system");
+  const expoFileSystemLegacyPath = projectRequire.resolve("expo-file-system/legacy");
+  const createFileSystemModule = () => ({
+    ...require(`actual:${expoFileSystemPath}`),
     __esModule: true,
     __reset: resetExpoFileSystemMock,
-  }));
-  mock.module("expo-file-system/legacy", () => {
-    const actual = require("actual:expo-file-system/legacy");
+  });
+  const createLegacyModule = () => {
+    const actual = require(`actual:${expoFileSystemLegacyPath}`);
     const legacyNativeModule = getExponentFileSystemNativeModule();
     return {
       ...actual,
       __esModule: true,
       ...legacyNativeModule,
     };
-  });
+  };
+
+  mock.module(mockPaths.mockPath, () => getExpoFileSystemNativeModule());
+  mock.module(mockPaths.mockPathWithoutExtension, () => getExpoFileSystemNativeModule());
+  mock.module(expoFileSystemPath, createFileSystemModule);
+  mock.module(expoFileSystemLegacyPath, createLegacyModule);
   return true;
 };
