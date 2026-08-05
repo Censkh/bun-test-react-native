@@ -64,7 +64,7 @@ describe("Cloudflare worker fetch", () => {
       ],
       cwd: import.meta.dir,
       stderr: "pipe",
-      stdout: "pipe",
+      stdout: "ignore",
     });
 
     expect(result.exitCode, result.stderr.toString()).toBe(0);
