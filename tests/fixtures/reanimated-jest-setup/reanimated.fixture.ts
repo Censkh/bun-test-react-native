@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import fs from "node:fs";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { transpile } from "../../../src/plugin";
 
 const importNativeReanimated = () => import("react-native-reanimated/lib/module/ReanimatedModule/NativeReanimated.js");
@@ -40,8 +42,12 @@ describe("react-native-reanimated Jest setup compatibility", () => {
     const source = fs.readFileSync(mockPath, "utf8");
     const output = transpile({ source, filePath: mockPath });
 
-    expect(output).toContain('export * from "./src/mock"');
-    expect(output).toContain('export * from "./src/mock-svg"');
+    expect(output).toContain(
+      `export * from ${JSON.stringify(pathToFileURL(path.join(path.dirname(mockPath), "src/mock.ts")).href)}`,
+    );
+    expect(output).toContain(
+      `export * from ${JSON.stringify(pathToFileURL(path.join(path.dirname(mockPath), "src/mock-svg.ts")).href)}`,
+    );
     expect(output).toContain("export default module.exports");
   });
 });

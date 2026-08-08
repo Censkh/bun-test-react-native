@@ -5,9 +5,9 @@ import path from "node:path";
 import type { BunPlugin } from "bun";
 import { normalizeResolverOptions, resolveReactNativeImport, toFilePath } from "./platformResolver";
 import {
+  addRelativeSpecifierRewrite,
   getJavaScriptLoader,
   getReactNativeTransformations,
-  rewriteRelativeSpecifiersToFileUrls,
   transpile,
 } from "./transpile";
 
@@ -34,7 +34,7 @@ const REACT_NATIVE_ASSET_FILE_PATTERN = /\.(?:bmp|gif|jpg|jpeg|m4a|mp3|mp4|otf|p
 const NORMAL_SOURCE_FILE_PATTERN =
   /^(?!.*[/\\]node_modules[/\\](?!@expo[/\\]|@react-native[/\\]|expo(?:[/\\]|-|$)|react-native(?!-gesture-handler(?:[/\\]|$))(?:[/\\]|-|$))).*\.[cm]?[jt]sx?$/;
 const NODE_MODULES_SEGMENT = `${path.sep}node_modules${path.sep}`;
-const TRANSFORM_CACHE_VERSION = "4";
+const TRANSFORM_CACHE_VERSION = "5";
 const identifierPattern = /^[A-Za-z_$][\w$]*$/;
 
 type PackageJson = {
@@ -206,8 +206,9 @@ const writeCachedTransform = (cachePath: string, contents: string) => {
   } catch {}
 };
 
-const isOnlyCommonJsExportsTransform = (transformations: readonly string[]) =>
-  transformations.length === 1 && transformations[0] === "commonjs-exports";
+const isCommonJsActualWrapperCandidate = (transformations: readonly string[]) =>
+  transformations.filter((transformation) => transformation !== "rewrite-relative-specifiers").length === 1 &&
+  transformations.includes("commonjs-exports");
 
 const evaluateCommonJsActual = (filePath: string, source: string) => {
   const module = { exports: {} };
@@ -344,16 +345,11 @@ export const reactNativePlatformResolverPlugin: BunPlugin = {
       const loader = getJavaScriptLoader(filePath);
       const source = fs.readFileSync(filePath, "utf8");
       const transformations = getReactNativeTransformations(source, filePath, loader, options);
-      const commonJsWrapper = isOnlyCommonJsExportsTransform(transformations)
+      const runtimeTransforms = addRelativeSpecifierRewrite(transformations, source, loader);
+      const commonJsWrapper = isCommonJsActualWrapperCandidate(transformations)
         ? tryCreateCommonJsActualWrapper(filePath, source)
         : null;
-      const contents =
-        commonJsWrapper ??
-        rewriteRelativeSpecifiersToFileUrls(
-          transformations.length > 0 ? transpile({ source, filePath, options, transforms: transformations }) : source,
-          filePath,
-          options,
-        );
+      const contents = commonJsWrapper ?? transpile({ source, filePath, options, transforms: runtimeTransforms });
 
       debug("onLoad actual", filePath);
       return {

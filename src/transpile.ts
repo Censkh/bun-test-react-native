@@ -83,6 +83,10 @@ export const TRANSPILE_TRANSFORMS: readonly TranspileTransform[] = [
     predicate: ({ filePath, loader, resolverOptions, source }) =>
       hasResolvableExtensionlessPlatformSpecifier(source, filePath, loader, resolverOptions),
   },
+  {
+    id: "rewrite-relative-specifiers",
+    predicate: ({ loader, source }) => hasRelativeModuleSpecifier(source, loader),
+  },
 ];
 
 export const getReactNativeTransformations = (
@@ -105,7 +109,7 @@ export const getReactNativeTransformations = (
     transforms.push("rewrite-extensionless-specifiers");
   }
 
-  return transforms;
+  return transforms.length > 0 ? addRelativeSpecifierRewrite(transforms, source, loader) : transforms;
 };
 
 export const shouldTransformReactNativeSource = (
@@ -124,11 +128,14 @@ export type ReactNativeTranspileRequest = {
 
 export const transpile = ({ filePath, options = {}, source, transforms }: ReactNativeTranspileRequest) => {
   const activeTransforms = transforms ?? getReactNativeTransformations(source, filePath, undefined, options);
-  return getTranspileBackend().transform(source, {
+  const output = getTranspileBackend().transform(source, {
     filename: filePath,
     resolverOptions: options,
     transforms: activeTransforms,
   });
+  return activeTransforms.includes("rewrite-relative-specifiers")
+    ? rewriteRelativeSpecifiersToFileUrls(output, filePath, options)
+    : output;
 };
 
 export const hasExtensionlessPlatformSpecifier = (source: string, loader: JavaScriptLoader = "js") => {
@@ -142,6 +149,27 @@ export const hasExtensionlessPlatformSpecifier = (source: string, loader: JavaSc
     return false;
   }
 };
+
+const hasRelativeModuleSpecifier = (source: string, loader: JavaScriptLoader) => {
+  if (!source.includes("./") && !source.includes("../")) return false;
+
+  try {
+    return getTranspiler(loader)
+      .scanImports(source)
+      .some((importRecord) => isRelativeSpecifier(importRecord.path));
+  } catch {
+    return true;
+  }
+};
+
+export const addRelativeSpecifierRewrite = (
+  transforms: readonly TranspileTransformId[],
+  source: string,
+  loader: JavaScriptLoader,
+): TranspileTransformId[] =>
+  transforms.includes("rewrite-relative-specifiers") || !hasRelativeModuleSpecifier(source, loader)
+    ? [...transforms]
+    : [...transforms, "rewrite-relative-specifiers"];
 
 export const hasResolvableExtensionlessPlatformSpecifier = (
   source: string,

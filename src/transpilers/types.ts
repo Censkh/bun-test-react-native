@@ -2,7 +2,12 @@ import type { ReactNativeResolverOptions } from "../platformResolver";
 
 export type JavaScriptLoader = "js" | "jsx" | "ts" | "tsx";
 
-export type TranspileTransformId = "flow" | "typescript" | "commonjs-exports" | "rewrite-extensionless-specifiers";
+export type TranspileTransformId =
+  | "flow"
+  | "typescript"
+  | "commonjs-exports"
+  | "rewrite-extensionless-specifiers"
+  | "rewrite-relative-specifiers";
 
 export type ReactNativeTransformation = TranspileTransformId;
 

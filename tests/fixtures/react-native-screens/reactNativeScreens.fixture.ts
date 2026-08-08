@@ -1,11 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import fs from "node:fs";
 import path from "node:path";
-import {
-  hasExtensionlessPlatformSpecifier,
-  rewriteExtensionlessPlatformSpecifiers,
-  transpile,
-} from "../../../src/plugin";
+import { pathToFileURL } from "node:url";
+import { hasExtensionlessPlatformSpecifier, transpile } from "../../../src/plugin";
 
 describe("react-native-screens platform resolution", () => {
   test("loads platform-specific CJS internals without a module mock", () => {
@@ -24,15 +21,11 @@ describe("react-native-screens platform resolution", () => {
 
     expect(hasExtensionlessPlatformSpecifier(transpiled)).toBe(false);
 
-    const rewritten = rewriteExtensionlessPlatformSpecifiers(transpiled, hostIndexPath, {
-      platform: "ios",
-      projectRoot: path.dirname(packageRoot),
-    });
-
-    expect(rewritten).toContain('require("./TabsHost.ios.js")');
-    expect(rewritten).not.toContain('require("./TabsHost")');
-    expect(rewritten).toMatch(/__lazyExport\(\s*\(\)\s*=>\s*module\.exports\.TabsHost,\s*true\s*\)/);
-    expect(rewritten).toContain("as TabsHost");
+    const tabsHostPath = path.join(path.dirname(hostIndexPath), "TabsHost.ios.js");
+    expect(transpiled).toContain(`require(${JSON.stringify(pathToFileURL(tabsHostPath).href)})`);
+    expect(transpiled).not.toContain('require("./TabsHost")');
+    expect(transpiled).toMatch(/__lazyExport\(\s*\(\)\s*=>\s*module\.exports\.TabsHost,\s*true\s*\)/);
+    expect(transpiled).toContain("as TabsHost");
   });
 
   test("transpiles platform implementation without changing React Native member access", () => {

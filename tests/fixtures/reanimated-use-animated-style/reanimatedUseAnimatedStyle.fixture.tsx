@@ -18,6 +18,8 @@ const AnimatedStyleProbe = () => {
 
 describe("react-native-reanimated useAnimatedStyle", () => {
   test("renders without requiring a dependency array or Babel plugin in Bun tests", async () => {
+    expect(Animated.View).toBeTruthy();
+
     const result = await render(<AnimatedStyleProbe />);
 
     expect(result.getByText("Animated style probe")).toBeTruthy();

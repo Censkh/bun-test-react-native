@@ -2,7 +2,8 @@ import { afterEach, describe, expect, test } from "bun:test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { getReactNativeTransformations, shouldTransformReactNativeSource } from "../src/plugin";
+import { pathToFileURL } from "node:url";
+import { getReactNativeTransformations, shouldTransformReactNativeSource, transpile } from "../src/plugin";
 
 const testRoots: string[] = [];
 
@@ -45,7 +46,7 @@ describe("React Native transform decision", () => {
         "module.exports = require('./Thing');",
         "/project/node_modules/@react-native/normalize-colors/index.js",
       ),
-    ).toEqual(["commonjs-exports"]);
+    ).toEqual(["commonjs-exports", "rewrite-relative-specifiers"]);
   });
 
   test("transforms resolved extensionless platform specifiers without CJS or Flow", () => {
@@ -58,10 +59,10 @@ describe("React Native transform decision", () => {
         platform: "ios",
         projectRoot: root,
       }),
-    ).toEqual(["rewrite-extensionless-specifiers"]);
+    ).toEqual(["rewrite-extensionless-specifiers", "rewrite-relative-specifiers"]);
   });
 
-  test("does not rewrite base-only extensionless specifiers", () => {
+  test("does not select a platform file for base-only extensionless specifiers", () => {
     const root = createTestRoot();
     const importer = writeFile(root, "node_modules/react-native-reanimated/src/index.ts");
     writeFile(root, "node_modules/react-native-reanimated/src/Thing.ts");
@@ -71,7 +72,7 @@ describe("React Native transform decision", () => {
         platform: "ios",
         projectRoot: root,
       }),
-    ).toEqual(["typescript"]);
+    ).toEqual(["typescript", "rewrite-relative-specifiers"]);
   });
 
   test("keeps CommonJS transform without base-only extensionless rewrite", () => {
@@ -84,7 +85,40 @@ describe("React Native transform decision", () => {
         platform: "ios",
         projectRoot: root,
       }),
-    ).toEqual(["commonjs-exports"]);
+    ).toEqual(["commonjs-exports", "rewrite-relative-specifiers"]);
+  });
+
+  test("canonicalizes base-only CommonJS dependencies after export transpilation", () => {
+    const root = createTestRoot();
+    const importer = writeFile(root, "node_modules/expo-router/build/native-tabs/NativeTabsView.ios.js");
+    const dependency = writeFile(root, "node_modules/expo-router/build/native-tabs/NativeTabsView.shared.js");
+    const source = "const shared = require('./NativeTabsView.shared'); module.exports = shared;";
+    const options = { platform: "ios", projectRoot: root };
+
+    expect(getReactNativeTransformations(source, importer, undefined, options)).toEqual([
+      "commonjs-exports",
+      "rewrite-relative-specifiers",
+    ]);
+    expect(transpile({ source, filePath: importer, options })).toContain(
+      `require(${JSON.stringify(pathToFileURL(dependency).href)})`,
+    );
+  });
+
+  test("canonicalizes platform CommonJS dependencies after platform selection", () => {
+    const root = createTestRoot();
+    const importer = writeFile(root, "node_modules/react-native-screens/lib/module/index.js");
+    const dependency = writeFile(root, "node_modules/react-native-screens/lib/module/TabsHost.ios.js");
+    const source = "const TabsHost = require('./TabsHost'); module.exports = TabsHost;";
+    const options = { platform: "ios", projectRoot: root };
+
+    expect(getReactNativeTransformations(source, importer, undefined, options)).toEqual([
+      "commonjs-exports",
+      "rewrite-extensionless-specifiers",
+      "rewrite-relative-specifiers",
+    ]);
+    expect(transpile({ source, filePath: importer, options })).toContain(
+      `require(${JSON.stringify(pathToFileURL(dependency).href)})`,
+    );
   });
 
   test("uses TypeScript transform only for TypeScript loaders", () => {
@@ -124,7 +158,7 @@ describe("React Native transform decision", () => {
         platform: "ios",
         projectRoot: root,
       }),
-    ).toEqual(["commonjs-exports", "rewrite-extensionless-specifiers"]);
+    ).toEqual(["commonjs-exports", "rewrite-extensionless-specifiers", "rewrite-relative-specifiers"]);
   });
 
   test("skips plain ESM without platform specifiers", () => {

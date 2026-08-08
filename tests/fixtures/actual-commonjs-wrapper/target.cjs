@@ -1,7 +1,7 @@
-function target() {
-  return "actual-default";
-}
+const helper = require("./target-helper.cjs");
 
-target.named = () => "actual-named";
+const target = () => helper.defaultValue();
+
+target.named = () => helper.namedValue();
 
 module.exports = target;
