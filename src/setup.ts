@@ -1,15 +1,7 @@
-import { projectRequire } from "./ProjectRequire";
+import { hasProjectPackage } from "./ProjectRequire";
 
 const warnWhenExpoJestDefinitionsAreMissing = () => {
-  try {
-    projectRequire.resolve("expo/package.json");
-  } catch {
-    return;
-  }
-
-  try {
-    projectRequire.resolve("jest-expo/package.json");
-  } catch {
+  if (hasProjectPackage("expo") && !hasProjectPackage("jest-expo")) {
     console.warn(
       "[bun-test-react-native] Expo is installed but jest-expo is not. Install jest-expo at the matching Expo SDK version to provide native-module definitions.",
     );
@@ -17,6 +9,7 @@ const warnWhenExpoJestDefinitionsAreMissing = () => {
 };
 
 warnWhenExpoJestDefinitionsAreMissing();
+const hasExpoRuntime = hasProjectPackage("expo") || hasProjectPackage("expo-modules-core");
 
 require("./mock/MiniflareWorkerdPatch");
 require("./mock/UndiciMocks");
@@ -33,7 +26,9 @@ require("bun-jest-require-actual/setup");
 process.env.EXPO_PUBLIC_USE_RN_FETCH ??= "true";
 require("./mock/ReactNativeMocks");
 require("./mock/ReanimatedMocks");
-require("./mock/ExpoWinterMocks");
-require("./mock/ExpoMocks");
+if (hasExpoRuntime) {
+  require("./mock/ExpoWinterMocks");
+  require("./mock/ExpoMocks");
+}
 require("./mock/FirebaseMocks");
 require("./mock/CommunityMocks");
