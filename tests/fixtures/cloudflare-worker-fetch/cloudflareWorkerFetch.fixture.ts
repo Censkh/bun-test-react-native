@@ -1,8 +1,29 @@
 import { describe, expect, test } from "bun:test";
+import childProcess from "node:child_process";
 import path from "node:path";
 import { Api, FetchRequestBackend } from "api-def";
 import { Request as UndiciRequest } from "undici";
 import { createTestHarness } from "wrangler";
+
+const traceWorkerProcesses = process.env.BUN_TEST_RN_TRACE_WORKER_PROCESSES === "1";
+const originalSpawn = childProcess.spawn.bind(childProcess);
+childProcess.spawn = (...args) => {
+  const child = originalSpawn(...args);
+  const command = String(args[0]);
+  if (!traceWorkerProcesses || !command.includes("workerd")) return child;
+
+  console.error(
+    "[cloudflare-workerd]",
+    JSON.stringify({ event: "spawn", pid: child.pid, command, stdio: args[2]?.stdio }),
+  );
+  child.once("exit", (code, signal) => {
+    console.error("[cloudflare-workerd]", JSON.stringify({ event: "exit", pid: child.pid, code, signal }));
+  });
+  child.once("error", (error) => {
+    console.error("[cloudflare-workerd]", JSON.stringify({ event: "error", pid: child.pid, message: error.message }));
+  });
+  return child;
+};
 
 const timeout = (message: string, ms = 1_000) =>
   new Promise<never>((_, reject) => {
@@ -39,18 +60,7 @@ describe("Cloudflare worker fetch", () => {
         "--eval",
         `
           import path from "node:path";
-          import childProcess from "node:child_process";
           import { unstable_startWorker } from "wrangler";
-
-          const workerdExits = [];
-          const originalSpawn = childProcess.spawn.bind(childProcess);
-          childProcess.spawn = (...args) => {
-            const child = originalSpawn(...args);
-            if (String(args[0]).includes("workerd")) {
-              workerdExits.push(new Promise((resolve) => child.once("exit", resolve)));
-            }
-            return child;
-          };
 
           const worker = await unstable_startWorker({
             config: path.join(process.cwd(), "wrangler.toml"),
@@ -70,7 +80,6 @@ describe("Cloudflare worker fetch", () => {
             if (body !== "cloudflare-ok") throw new Error(\`Unexpected body \${body}\`);
           } finally {
             await worker.dispose();
-            await Promise.all(workerdExits);
           }
         `,
       ],
