@@ -73,7 +73,7 @@ describe("React Native module transpile", () => {
   });
 
   test("transpiles react-native/index.js to ESM-compatible exports", () => {
-    const reactNativeIndexPath = require.resolve("react-native/index.js");
+    const reactNativeIndexPath = require.resolve("react-native");
     const source = fs.readFileSync(reactNativeIndexPath, "utf8");
     const output = transpile({ source, filePath: reactNativeIndexPath });
 
