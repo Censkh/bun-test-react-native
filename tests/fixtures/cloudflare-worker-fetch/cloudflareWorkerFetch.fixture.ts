@@ -39,7 +39,18 @@ describe("Cloudflare worker fetch", () => {
         "--eval",
         `
           import path from "node:path";
+          import childProcess from "node:child_process";
           import { unstable_startWorker } from "wrangler";
+
+          const workerdExits = [];
+          const originalSpawn = childProcess.spawn.bind(childProcess);
+          childProcess.spawn = (...args) => {
+            const child = originalSpawn(...args);
+            if (String(args[0]).includes("workerd")) {
+              workerdExits.push(new Promise((resolve) => child.once("exit", resolve)));
+            }
+            return child;
+          };
 
           const worker = await unstable_startWorker({
             config: path.join(process.cwd(), "wrangler.toml"),
@@ -59,6 +70,7 @@ describe("Cloudflare worker fetch", () => {
             if (body !== "cloudflare-ok") throw new Error(\`Unexpected body \${body}\`);
           } finally {
             await worker.dispose();
+            await Promise.all(workerdExits);
           }
         `,
       ],
