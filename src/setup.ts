@@ -18,6 +18,7 @@ const warnWhenExpoJestDefinitionsAreMissing = () => {
 
 warnWhenExpoJestDefinitionsAreMissing();
 
+require("./mock/MiniflareWorkerdPatch");
 require("./mock/UndiciMocks");
 const nativeModules = require("./mock/NativeModules").default as Record<string, unknown>;
 const testGlobal = globalThis as typeof globalThis & {
