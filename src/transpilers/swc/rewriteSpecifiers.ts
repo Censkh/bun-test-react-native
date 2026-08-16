@@ -51,6 +51,12 @@ const visit = (node: unknown, rewriteSpecifier: SpecifierRewriter) => {
     case "ExportNamedDeclaration":
       rewriteStringLiteral(node.source, "export-named", rewriteSpecifier);
       break;
+    case "GetterProperty":
+    case "SetterProperty":
+    case "MethodProperty":
+      visit(node.function, rewriteSpecifier);
+      visit(node.body, rewriteSpecifier);
+      break;
     case "CallExpression": {
       const callee = node.callee;
       const args = node.arguments;
@@ -72,7 +78,7 @@ const visit = (node: unknown, rewriteSpecifier: SpecifierRewriter) => {
 
   for (const [key, value] of Object.entries(node)) {
     if (key === "span" || key === "ctxt") continue;
-    if (isNode(value) || Array.isArray(value)) visit(value, rewriteSpecifier);
+    if (isObject(value) || Array.isArray(value)) visit(value, rewriteSpecifier);
   }
 };
 
