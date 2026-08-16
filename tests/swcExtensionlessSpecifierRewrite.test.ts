@@ -91,4 +91,23 @@ describe("SWC extensionless platform specifier rewrite", () => {
 
     expect(output).toContain('from "./value"');
   });
+
+  test("rewrites specifiers nested in getter functions", () => {
+    const root = createTestRoot();
+    const importer = writeFile(root, "src/example.js");
+    writeFile(root, "src/button.ios.js");
+    const output = rewriteExtensionlessSpecifiersWithSwc(
+      `
+        module.exports = {
+          get Button() {
+            return require("./button").default;
+          },
+        };
+      `,
+      importer,
+      { platform: "ios", projectRoot: root },
+    );
+
+    expect(output).toContain('require("./button.ios.js")');
+  });
 });
