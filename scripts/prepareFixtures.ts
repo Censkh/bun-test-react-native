@@ -10,8 +10,10 @@ for (const entry of fs.readdirSync(fixturesRoot, { withFileTypes: true })) {
   if (!fs.existsSync(path.join(fixtureRoot, "package.json"))) continue;
 
   console.log(`Installing fixture dependencies for ${entry.name}`);
+  const installArgs = ["install", "--no-save"];
+  if (entry.name === "flash-list-ref") installArgs.push("--omit=peer");
   const result = Bun.spawnSync({
-    cmd: [process.execPath, "install", "--no-save"],
+    cmd: [process.execPath, ...installArgs],
     cwd: fixtureRoot,
     stdio: ["inherit", "inherit", "inherit"],
   });

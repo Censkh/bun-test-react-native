@@ -30,8 +30,10 @@ export const expectBunFixtureToPass = (
   const packageJsonPath = path.join(fixtureRoot, "package.json");
   const fixtureNodeModulesPath = path.join(fixtureRoot, "node_modules");
   if (fs.existsSync(packageJsonPath) && !fs.existsSync(fixtureNodeModulesPath)) {
+    const installArgs = ["install", "--no-save"];
+    if (path.basename(fixtureRoot) === "flash-list-ref") installArgs.push("--omit=peer");
     const installResult = Bun.spawnSync({
-      cmd: [process.execPath, "install", "--no-save"],
+      cmd: [process.execPath, ...installArgs],
       cwd: fixtureRoot,
       env: { ...process.env, ...options.env },
       stderr: "pipe",
