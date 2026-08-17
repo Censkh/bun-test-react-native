@@ -1,6 +1,6 @@
 import { mock } from "bun:test";
 
-import "../../../src/setup";
+import "bun-test-react-native/setup";
 
 mock.module("@react-native-clipboard/clipboard", () => {
   const Clipboard = require("@react-native-clipboard/clipboard/jest/clipboard-mock");

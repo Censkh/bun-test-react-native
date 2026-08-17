@@ -1,4 +1,4 @@
-import "../../../src/setup";
+import "bun-test-react-native/setup";
 
 import { afterEach, mock } from "bun:test";
 import { Blob, File } from "node:buffer";

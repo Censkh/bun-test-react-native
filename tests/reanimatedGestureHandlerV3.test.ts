@@ -1,9 +1,15 @@
-import { describe, test } from "bun:test";
+import { describe } from "bun:test";
 
-import { expectBunFixtureToPass, fixturePath } from "./fixtureRunner";
+import { bunFixtureTest, fixturePath } from "./fixtureRunner";
+
+const fixture = bunFixtureTest(fixturePath(import.meta.dir, "reanimated-gesture-handler-v3"));
 
 describe("react-native-gesture-handler v3 Reanimated mock fixture", () => {
-  test("passes in its own Bun test process", () => {
-    expectBunFixtureToPass(fixturePath(import.meta.dir, "reanimated-gesture-handler-v3"));
-  }, 30_000);
+  fixture.test(
+    "passes in its own Bun test process",
+    ({ run }) => {
+      run().expectStatusCode(0);
+    },
+    30_000,
+  );
 });

@@ -1,10 +1,11 @@
-import { describe, test } from "bun:test";
-import { expectBunFixtureToPass, fixturePath } from "./fixtureRunner";
+import { describe } from "bun:test";
+import { bunFixtureTest, fixturePath } from "./fixtureRunner";
 
 const fixtureRoot = fixturePath(import.meta.dir, "expo-ui");
+const fixture = bunFixtureTest(fixtureRoot);
 
 describe("@expo/ui fixture", () => {
-  test("renders native-backed SwiftUI and Jetpack Compose components", () => {
-    expectBunFixtureToPass(fixtureRoot);
+  fixture.test("renders native-backed SwiftUI and Jetpack Compose components", ({ run }) => {
+    run().expectStatusCode(0);
   });
 });

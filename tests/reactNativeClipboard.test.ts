@@ -1,10 +1,11 @@
-import { describe, test } from "bun:test";
-import { expectBunFixtureToPass, fixturePath } from "./fixtureRunner";
+import { describe } from "bun:test";
+import { bunFixtureTest, fixturePath } from "./fixtureRunner";
 
 const fixtureRoot = fixturePath(import.meta.dir, "react-native-clipboard");
+const fixture = bunFixtureTest(fixtureRoot);
 
 describe("@react-native-clipboard/clipboard fixture", () => {
-  test("uses the package-provided Jest mock", () => {
-    expectBunFixtureToPass(fixtureRoot);
+  fixture.test("uses the package-provided Jest mock", ({ run }) => {
+    run().expectStatusCode(0);
   });
 });
