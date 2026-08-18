@@ -5,6 +5,7 @@ import path from "node:path";
 export const fixturePath = (testDir: string, fixtureName: string) => path.join(testDir, "fixtures", fixtureName);
 
 const packageRoot = path.resolve(import.meta.dir, "..");
+const fixturePreparationTimeoutMs = 60_000;
 
 type BunFixtureBeforeOptions = {
   env?: NodeJS.ProcessEnv;
@@ -71,7 +72,7 @@ const beforeBunFixture = (fixtureRoot: string, options: BunFixtureBeforeOptions 
   beforeAll(() => {
     prepareBunFixture(resolvedFixtureRoot, options);
     preparedFixtureRoots.add(resolvedFixtureRoot);
-  });
+  }, fixturePreparationTimeoutMs);
 };
 
 type BunFixtureResult = {
