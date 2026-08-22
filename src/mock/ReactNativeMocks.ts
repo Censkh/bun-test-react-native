@@ -321,8 +321,10 @@ mockReactNativeModule("react-native/Libraries/NativeComponent/NativeComponentReg
   getWithFallback_DEPRECATED: jest.fn((name: string) => createNativeComponent(name)),
   setRuntimeConfigProvider: jest.fn(),
 }));
+const rendererImplementationPath = projectRequire.resolve("react-native/Libraries/ReactNative/RendererImplementation");
+
 const mockRendererProxy = () => ({
-  ...require("actual:react-native/Libraries/ReactNative/RendererImplementation"),
+  ...require(`actual:${rendererImplementationPath}`),
   findNodeHandle: jest.fn(() => 1),
 });
 mockReactNativeModule("react-native/Libraries/ReactNative/RendererProxy", mockRendererProxy);

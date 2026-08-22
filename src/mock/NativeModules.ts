@@ -57,6 +57,18 @@ const AppState = {
   removeListeners: noop,
 };
 
+const createSensorModule = () => ({
+  addListener: () => ({ remove: noop }),
+  getPermissionsAsync: () => Promise.resolve({ canAskAgain: true, expires: "never", granted: true, status: "granted" }),
+  isAvailableAsync: () => Promise.resolve(false),
+  listenerCount: () => 0,
+  removeAllListeners: noop,
+  removeListeners: noop,
+  requestPermissionsAsync: () =>
+    Promise.resolve({ canAskAgain: true, expires: "never", granted: true, status: "granted" }),
+  setUpdateInterval: noop,
+});
+
 const NativeAnimatedModule = {
   addAnimatedEventToView: noop,
   addListener: noop,
@@ -128,6 +140,44 @@ const NativeModules = {
     },
     statusBarHeight: 0,
     systemFonts: [],
+  },
+  ExpoBarometer: createSensorModule(),
+  ExpoLightSensor: createSensorModule(),
+  ExponentAccelerometer: createSensorModule(),
+  ExponentDeviceMotion: {
+    ...createSensorModule(),
+    Gravity: 9.80665,
+  },
+  ExponentGyroscope: createSensorModule(),
+  ExponentMagnetometer: createSensorModule(),
+  ExponentMagnetometerUncalibrated: createSensorModule(),
+  ExpoUpdates: {
+    addListener: () => ({ remove: noop }),
+    checkAutomatically: "NEVER",
+    checkForUpdateAsync: () => Promise.resolve({ isAvailable: false }),
+    clearLogEntriesAsync: () => Promise.resolve(),
+    fetchUpdateAsync: () => Promise.resolve({ isNew: false }),
+    getExtraParamsAsync: () => Promise.resolve({}),
+    hideReloadScreen: noop,
+    initialContext: {
+      isChecking: false,
+      isDownloading: false,
+      isUpdateAvailable: false,
+      isUpdatePending: false,
+      sequenceNumber: 0,
+    },
+    isEnabled: false,
+    isEmergencyLaunch: false,
+    isEmbeddedLaunch: true,
+    isUsingEmbeddedAssets: false,
+    localAssets: {},
+    readLogEntriesAsync: () => Promise.resolve([]),
+    reload: () => Promise.resolve(),
+    removeListeners: noop,
+    setExtraParamAsync: () => Promise.resolve(),
+    setUpdateRequestHeadersOverride: noop,
+    setUpdateURLAndRequestHeadersOverride: noop,
+    showReloadScreen: noop,
   },
   ImageLoader,
   ImageViewManager: ImageLoader,

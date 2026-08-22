@@ -34,7 +34,7 @@ const REACT_NATIVE_ASSET_FILE_PATTERN = /\.(?:bmp|gif|jpg|jpeg|m4a|mp3|mp4|otf|p
 const NORMAL_SOURCE_FILE_PATTERN =
   /^(?!.*[/\\]node_modules[/\\](?!@expo[/\\]|@react-native[/\\]|expo(?:[/\\]|-|$)|react-native(?!-gesture-handler(?:[/\\]|$))(?:[/\\]|-|$))).*\.[cm]?[jt]sx?$/;
 const NODE_MODULES_SEGMENT = `${path.sep}node_modules${path.sep}`;
-const TRANSFORM_CACHE_VERSION = "7";
+const TRANSFORM_CACHE_VERSION = "8";
 const identifierPattern = /^[A-Za-z_$][\w$]*$/;
 
 type PackageJson = {

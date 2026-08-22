@@ -11,6 +11,21 @@ const warnWhenExpoJestDefinitionsAreMissing = () => {
 warnWhenExpoJestDefinitionsAreMissing();
 const hasExpoRuntime = hasProjectPackage("expo") || hasProjectPackage("expo-modules-core");
 
+const installExpoGlobalStub = () => {
+  const expoGlobal = ((globalThis as any).expo ??= {});
+  expoGlobal.EventEmitter ??= class EventEmitter {};
+  expoGlobal.NativeModule ??= class NativeModule {};
+  expoGlobal.SharedObject ??= class SharedObject {};
+  expoGlobal.SharedRef ??= class SharedRef {};
+  expoGlobal.modules ??= {};
+  expoGlobal.getViewConfig ??= () => ({
+    directEventTypes: {},
+    validAttributes: {},
+  });
+  expoGlobal.reloadAppAsync ??= async () => {};
+  expoGlobal.installOnUIRuntime ??= () => {};
+};
+
 require("./mock/MiniflareWorkerdPatch");
 require("./mock/UndiciMocks");
 const nativeModules = require("./mock/NativeModules").default as Record<string, unknown>;
@@ -24,6 +39,9 @@ require("./plugin-entry");
 require("bun-jest-require-actual/setup");
 
 process.env.EXPO_PUBLIC_USE_RN_FETCH ??= "true";
+if (hasExpoRuntime) {
+  installExpoGlobalStub();
+}
 require("./mock/ReactNativeMocks");
 require("./mock/ReanimatedMocks");
 if (hasExpoRuntime) {

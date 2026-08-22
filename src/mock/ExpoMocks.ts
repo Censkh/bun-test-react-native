@@ -283,8 +283,8 @@ const createExpoModulesCoreMock = () => {
 
   const requireMockModule = (name) => {
     const nativeModuleMock =
-      attemptLookup(name) ??
       mockNativeModules[name] ??
+      attemptLookup(name) ??
       getExpoModuleMock(name) ??
       mockNativeModules.NativeUnimoduleProxy?.modulesConstants?.[name] ??
       actualRequireOptionalNativeModule?.(name);
