@@ -1,8 +1,8 @@
 type UserState = {
   isMeFetched: boolean;
   remoteData: {
-    filters: unknown[];
-    savedFilters: unknown[];
+    prompts: unknown[];
+    savedPrompts: unknown[];
     showcaseCards: unknown[];
     user: unknown;
   };
@@ -11,8 +11,8 @@ type UserState = {
 let state: UserState = {
   isMeFetched: false,
   remoteData: {
-    filters: [],
-    savedFilters: [],
+    prompts: [],
+    savedPrompts: [],
     showcaseCards: [],
     user: null,
   },

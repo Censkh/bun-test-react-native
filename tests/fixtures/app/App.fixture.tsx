@@ -28,8 +28,8 @@ describe("@backpackapp-io/react-native-toast with Expo Router", () => {
     useUserStore.setState({
       isMeFetched: false,
       remoteData: {
-        filters: [],
-        savedFilters: [],
+        prompts: [],
+        savedPrompts: [],
         showcaseCards: [],
         user: null,
       },

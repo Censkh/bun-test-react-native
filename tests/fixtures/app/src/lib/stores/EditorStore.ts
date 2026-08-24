@@ -1,6 +1,6 @@
 const state = {
   clearEditorState: () => {},
-  filterId: undefined,
+  promptId: undefined,
   layerId: undefined,
   projectId: undefined,
   setEditorState: () => {},
