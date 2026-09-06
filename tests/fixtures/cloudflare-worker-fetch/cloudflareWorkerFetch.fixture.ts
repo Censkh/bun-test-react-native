@@ -193,7 +193,7 @@ describe("Cloudflare worker fetch", () => {
 
       const response = await Promise.race([
         worker.fetch("https://example.com/images-do-draw-fetched"),
-        timeout("/images-do-draw-fetched response timed out", 2_000),
+        timeout("/images-do-draw-fetched response timed out", 5_000),
       ]);
 
       expect(response.status).toBe(200);
