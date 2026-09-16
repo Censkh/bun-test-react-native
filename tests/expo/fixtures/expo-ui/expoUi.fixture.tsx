@@ -106,13 +106,7 @@ describe("@expo/ui native module mocks", () => {
     expect(image).toBeDefined();
     expect(image?.props?.systemName).toBe("square.and.arrow.up");
     expect(image?.props?.modifiers).toContainEqual(expect.objectContaining({ $type: "font", size: 22 }));
-    expect(image?.props?.modifiers).toContainEqual(
-      expect.objectContaining({
-        $type: "foregroundStyle",
-        color: "#123456",
-        styleType: "color",
-      }),
-    );
+    expect(image?.props?.modifiers).toContainEqual(SwiftModifiers.foregroundStyle("#123456"));
     expect(image?.props?.modifiers).toContainEqual(
       expect.objectContaining({
         $type: "frame",
@@ -122,8 +116,8 @@ describe("@expo/ui native module mocks", () => {
     );
   });
 
-  test("render many SwiftUI components", () => {
-    const tree = renderInsideSwiftHost(
+  test("render many SwiftUI components", async () => {
+    const tree = await renderInsideSwiftHost(
       <>
         <SwiftStateProbe onValue={noop} />
         <Swift.AccessoryWidgetBackground />
@@ -186,8 +180,8 @@ describe("@expo/ui native module mocks", () => {
     expect(tree).toBeTruthy();
   });
 
-  test("render many Jetpack Compose components", () => {
-    const tree = renderInsideComposeHost(
+  test("render many Jetpack Compose components", async () => {
+    const tree = await renderInsideComposeHost(
       <>
         <ComposeStateProbe onValue={noop} />
         <Compose.AlertDialog visible title="Alert">

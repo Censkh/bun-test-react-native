@@ -17,8 +17,10 @@ jobs:
       fail-fast: false
       matrix:
         bun:
-          - name: 1.3.14
-            version: 1.3.14
+          - name: 1.3.x
+            version: "1.3.x"
+          - name: 1.4.x
+            version: "1.4.x"
           - name: canary
             version: canary
         react_native:
@@ -53,8 +55,10 @@ jobs:
       fail-fast: false
       matrix:
         bun:
-          - name: 1.3.14
-            version: 1.3.14
+          - name: 1.3.x
+            version: "1.3.x"
+          - name: 1.4.x
+            version: "1.4.x"
           - name: canary
             version: canary
         expo:

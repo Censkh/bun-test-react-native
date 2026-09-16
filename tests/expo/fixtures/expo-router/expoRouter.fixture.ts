@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import fs from "node:fs";
-import { renderRouter } from "expo-router/testing-library";
+import { render, renderRouter, waitFor } from "expo-router/testing-library";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import React from "react";
 import { Text } from "react-native";
@@ -34,10 +34,7 @@ describe("expo-router", () => {
   });
 
   test("transpiles testing-library files", () => {
-    const files = [
-      require.resolve("expo-router/testing-library"),
-      require.resolve("expo-router/build/testing-library"),
-    ];
+    const files = [require.resolve("expo-router/testing-library")];
 
     for (const filePath of files) {
       const source = fs.readFileSync(filePath, "utf8");
@@ -49,14 +46,8 @@ describe("expo-router", () => {
     }
   });
 
-  test("re-exports testing-library names assigned onto exports", () => {
-    const filePath = require.resolve("expo-router/build/testing-library");
-    const source = fs.readFileSync(filePath, "utf8");
-    const output = transpile({ source, filePath });
-
-    expect(source).toContain("Object.assign(exports, rnTestingLibrary)");
-    expect(output).toContain("export { _render as render }");
-    expect(output).toContain("export { _waitFor as waitFor }");
-    expect(output).not.toContain('export * from "@testing-library/react-native"');
+  test("re-exports usable testing-library names assigned onto exports", async () => {
+    const result = await render(React.createElement(Text, null, "Re-exported renderer"));
+    await waitFor(() => expect(result.getByText("Re-exported renderer")).toBeTruthy());
   });
 });
