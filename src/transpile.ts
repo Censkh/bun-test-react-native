@@ -44,9 +44,9 @@ export const isReanimatedJestMockPath = (filePath: string) =>
   );
 
 const CJS_EXPORT_PATTERN =
-  /\bmodule\.exports\b|\bexports\.[A-Za-z_$][\w$]*\b|Object\.(?:assign|defineProperty)\(\s*exports\b|__exportStar\(/;
+  /\bmodule\.exports\b|\bexports\.[A-Za-z_$][\w$]*\b|Object\.(?:assign|defineProperty)\(\s*exports\b|(?:__exportStar|_export_star|_export)\(/;
 const CJS_DYNAMIC_EXPORT_PATTERN =
-  /Object\.defineProperty\(\s*(?:exports|module\.exports)\s*,\s*[A-Za-z_$]|\bmodule\.exports\s*=|__exportStar\(\s*require\(/;
+  /Object\.defineProperty\(\s*(?:exports|module\.exports)\s*,\s*[A-Za-z_$]|\bmodule\.exports\s*=|(?:__exportStar|_export_star)\(\s*require\(/;
 const DEFAULT_EXPORT_PROPERTY_PATTERN =
   /(?:\b([A-Za-z_$][\w$]*)\.[A-Za-z_$][\w$]*\s*=[\s\S]*?\bexport\s+default\s+\1\b|\bexport\s+default\s+([A-Za-z_$][\w$]*)\b[\s\S]*?\b\2\.[A-Za-z_$][\w$]*\s*=)/;
 
@@ -151,12 +151,14 @@ export const hasExtensionlessPlatformSpecifier = (source: string, loader: JavaSc
 };
 
 const hasRelativeModuleSpecifier = (source: string, loader: JavaScriptLoader) => {
-  if (!source.includes("./") && !source.includes("../")) return false;
+  if (!source.includes("./") && !source.includes("../") && !source.includes("react-native/src/")) return false;
 
   try {
     return getTranspiler(loader)
       .scanImports(source)
-      .some((importRecord) => isRelativeSpecifier(importRecord.path));
+      .some(
+        (importRecord) => isRelativeSpecifier(importRecord.path) || importRecord.path.startsWith("react-native/src/"),
+      );
   } catch {
     return true;
   }
@@ -216,11 +218,12 @@ export const rewriteRelativeSpecifiersToAbsolute = (
   filename: string,
   options: ReactNativeResolverOptions = {},
 ) => {
-  if (!source.includes("./") && !source.includes("../")) return source;
+  if (!source.includes("./") && !source.includes("../") && !source.includes("react-native/src/")) return source;
 
   const normalizedOptions = normalizeResolverOptions(options);
   return rewriteSpecifiersWithSwc(source, filename, (specifier) => {
-    if (!isRelativeSpecifier(specifier)) return specifier;
+    // React Native’s own companion packages still import private internals excluded by RN 0.88 exports.
+    if (!isRelativeSpecifier(specifier) && !specifier.startsWith("react-native/src/")) return specifier;
     const result = resolveReactNativeImport(
       {
         importer: filename,
@@ -238,11 +241,12 @@ export const rewriteRelativeSpecifiersToFileUrls = (
   filename: string,
   options: ReactNativeResolverOptions = {},
 ) => {
-  if (!source.includes("./") && !source.includes("../")) return source;
+  if (!source.includes("./") && !source.includes("../") && !source.includes("react-native/src/")) return source;
 
   const normalizedOptions = normalizeResolverOptions(options);
   return rewriteSpecifiersWithSwc(source, filename, (specifier) => {
-    if (!isRelativeSpecifier(specifier)) return specifier;
+    // React Native’s own companion packages still import private internals excluded by RN 0.88 exports.
+    if (!isRelativeSpecifier(specifier) && !specifier.startsWith("react-native/src/")) return specifier;
     const result = resolveReactNativeImport(
       {
         importer: filename,

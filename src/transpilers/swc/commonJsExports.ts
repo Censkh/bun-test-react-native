@@ -261,11 +261,11 @@ const walk = (
     for (const child of node) walk(child, visitor, parent);
     return;
   }
-  if (!isNode(node)) return;
-  visitor(node, parent);
+  if (node == null || typeof node !== "object") return;
+  if (isNode(node)) visitor(node, parent);
   for (const [key, value] of Object.entries(node)) {
     if (key === "span" || key === "ctxt") continue;
-    if (Array.isArray(value) || isNode(value)) walk(value, visitor, node);
+    if (value && typeof value === "object") walk(value, visitor, isNode(node) ? node : parent);
   }
 };
 
@@ -280,6 +280,12 @@ const collectStaticExportNames = (source: string, filename: string | undefined, 
   }
 
   const requireBindings = new Map<string, string>();
+
+  ast.body = ast.body.filter((statement: SwcNode) => {
+    let expression = statement.type === "ExpressionStatement" ? statement.expression : null;
+    while (expression?.type === "BinaryExpression" && expression.operator === "&&") expression = expression.left;
+    return !(expression?.type === "NumericLiteral" && expression.value === 0);
+  });
 
   walk(ast.body, (node) => {
     if (node.type !== "VariableDeclarator") return;
@@ -356,7 +362,7 @@ const collectStaticExportNames = (source: string, filename: string | undefined, 
     }
 
     if (
-      idName(node.callee) === "__exportStar" &&
+      ["__exportStar", "_export_star"].includes(idName(node.callee) ?? "") &&
       Array.isArray(node.arguments) &&
       node.arguments.length >= 2 &&
       isExportsObject(argExpression(node.arguments[1]))
@@ -371,6 +377,15 @@ const collectStaticExportNames = (source: string, filename: string | undefined, 
       if (!isExportsObject(target)) return;
       for (const argument of node.arguments?.slice(1) ?? []) {
         addExpressionExportNames(argExpression(argument) as SwcNode | null | undefined);
+      }
+      return;
+    }
+
+    if (idName(node.callee) === "_export" && isExportsObject(argExpression(node.arguments?.[0]))) {
+      const definitions = argExpression(node.arguments?.[1]) as SwcNode | null;
+      for (const property of definitions?.properties ?? []) {
+        const name = objectPropertyName(property);
+        if (name && name !== "default" && name !== "__esModule") exportNames.add(name);
       }
       return;
     }
@@ -416,6 +431,12 @@ export const applyCommonJsExportsWithSwc = (source: string, filename?: string) =
       }
     } catch {}
   };
+
+  ast.body = ast.body.filter((statement: SwcNode) => {
+    let expression = statement.type === "ExpressionStatement" ? statement.expression : null;
+    while (expression?.type === "BinaryExpression" && expression.operator === "&&") expression = expression.left;
+    return !(expression?.type === "NumericLiteral" && expression.value === 0);
+  });
 
   walk(ast.body, (node) => {
     const name = idName(node);
@@ -552,7 +573,7 @@ export const applyCommonJsExportsWithSwc = (source: string, filename?: string) =
     }
 
     if (
-      idName(node.callee) === "__exportStar" &&
+      ["__exportStar", "_export_star"].includes(idName(node.callee) ?? "") &&
       Array.isArray(node.arguments) &&
       node.arguments.length >= 2 &&
       isExportsObject(argExpression(node.arguments[1]))
@@ -600,6 +621,22 @@ export const applyCommonJsExportsWithSwc = (source: string, filename?: string) =
       return;
     }
 
+    if (idName(node.callee) === "_export" && isExportsObject(argExpression(node.arguments?.[0]))) {
+      hasCommonJsExports = true;
+      const definitions = argExpression(node.arguments?.[1]) as SwcNode | null;
+      for (const property of definitions?.properties ?? []) {
+        const name = objectPropertyName(property);
+        if (name === "default") hasExportsDefault = true;
+        else if (name && name !== "__esModule") {
+          exportNames.add(name);
+          // SWC initializes its getter table and dependencies before these ESM bindings.
+          // Preserve identity for navigation marker components and React contexts.
+          directExportNames.add(name);
+        }
+      }
+      return;
+    }
+
     if (!isObjectDefinePropertyCall(node)) return;
     const target = argExpression(node.arguments?.[0]);
     const property = argExpression(node.arguments?.[1]);
@@ -612,7 +649,17 @@ export const applyCommonJsExportsWithSwc = (source: string, filename?: string) =
     if (exportName === "default") hasExportsDefault = true;
     else {
       exportNames.add(exportName);
-      if (isNode(descriptor) && descriptor.type === "ObjectExpression" && !hasObjectProperty(descriptor, "get")) {
+      const getter = isNode(descriptor)
+        ? descriptor.properties?.find((property: SwcNode) => objectPropertyName(property) === "get")
+        : undefined;
+      const returned = (getter?.value?.body ?? getter?.body)?.stmts?.find(
+        (statement: SwcNode) => statement.type === "ReturnStatement",
+      )?.argument;
+      if (
+        idName(returned) ||
+        exportName.endsWith("Context") ||
+        (isNode(descriptor) && descriptor.type === "ObjectExpression" && !hasObjectProperty(descriptor, "get"))
+      ) {
         directExportNames.add(exportName);
       }
     }

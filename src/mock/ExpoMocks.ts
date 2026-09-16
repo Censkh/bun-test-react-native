@@ -16,7 +16,8 @@ import { reactNativeNativeModules } from "./ReactNativeMocks";
 
 const mockNativeModules = reactNativeNativeModules;
 process.env.EXPO_OS ??= "ios";
-require("actual:expo-modules-core/src/polyfill/dangerous-internal").installExpoGlobalPolyfill();
+const expoCoreRoot = path.dirname(projectRequire.resolve("expo-modules-core/package.json"));
+require(`actual:${path.join(expoCoreRoot, "src/polyfill/dangerous-internal.ts")}`).installExpoGlobalPolyfill();
 
 const getExpoGlobal = () => {
   const expoGlobal = ((globalThis as any).expo ??= {});
@@ -43,7 +44,7 @@ Object.defineProperty(mockNativeModules, "ExpoModulesCoreJSLogger", {
 let actualExpoModulesCore: any;
 const getActualExpoModulesCore = () => {
   if (!actualExpoModulesCore) {
-    actualExpoModulesCore = require("actual:expo-modules-core");
+    actualExpoModulesCore = require(`actual:${path.join(expoCoreRoot, "src/index.ts")}`);
   }
   return actualExpoModulesCore;
 };
@@ -406,6 +407,8 @@ const createExpoMock = () => {
     SharedRef: ExpoModulesCore.SharedRef,
     UnavailabilityError: ExpoModulesCore.UnavailabilityError,
     createPermissionHook: ExpoModulesCore.createPermissionHook,
+    useReleasingSharedObject: ExpoModulesCore.useReleasingSharedObject,
+    useReleasingSharedObjectWithLifecycle: ExpoModulesCore.useReleasingSharedObjectWithLifecycle,
     disableErrorHandling: jest.fn(),
     getExpoGoProjectConfig: jest.fn(() => null),
     installOnUIRuntime: ExpoModulesCore.installOnUIRuntime,

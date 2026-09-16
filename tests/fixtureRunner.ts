@@ -7,6 +7,7 @@ export const fixturePath = (testDir: string, fixtureName: string) => path.join(t
 const packageRoot = path.resolve(import.meta.dir, "..");
 const fixturePreparationTimeoutMs = 60_000;
 const fixturePreparationLockTimeoutMs = 60_000;
+const fixtureRunTimeoutMs = 30_000;
 
 type BunFixtureBeforeOptions = {
   env?: NodeJS.ProcessEnv;
@@ -21,7 +22,17 @@ const sleepSync = (durationMs: number) => {
 const getFixturePackageLinkPath = (fixtureRoot: string) =>
   path.join(fixtureRoot, "node_modules", "bun-test-react-native");
 
-const isFixturePrepared = (fixtureRoot: string) => fs.existsSync(getFixturePackageLinkPath(fixtureRoot));
+const pathExists = (value: string) => {
+  try {
+    fs.lstatSync(value);
+    return true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
+    throw error;
+  }
+};
+
+const isFixturePrepared = (fixtureRoot: string) => pathExists(getFixturePackageLinkPath(fixtureRoot));
 
 const withFixturePreparationLock = <TResult>(fixtureRoot: string, callback: () => TResult) => {
   const lockPath = path.join(fixtureRoot, ".bun-test-react-native-prepare.lock");
@@ -55,10 +66,14 @@ const withFixturePreparationLock = <TResult>(fixtureRoot: string, callback: () =
 const linkFixturePackage = (fixtureRoot: string) => {
   const nodeModulesPath = path.join(fixtureRoot, "node_modules");
   const packageLinkPath = getFixturePackageLinkPath(fixtureRoot);
-  if (fs.existsSync(packageLinkPath)) return;
+  if (pathExists(packageLinkPath)) return;
 
   fs.mkdirSync(nodeModulesPath, { recursive: true });
   fs.symlinkSync(packageRoot, packageLinkPath, "dir");
+};
+
+const clearFixtureTransformCache = (fixtureRoot: string) => {
+  fs.rmSync(path.join(fixtureRoot, "node_modules", ".btrn-cache"), { force: true, recursive: true });
 };
 
 const findFixtureTests = (fixtureRoot: string): string[] => {
@@ -178,13 +193,15 @@ const runBunFixture = (fixtureRoot: string, options: BunFixtureRunOptions = {}) 
     });
   }
 
+  clearFixtureTransformCache(fixtureRoot);
+
   const result = Bun.spawnSync({
     cmd: [
       process.execPath,
       "test",
       ...(options.testArgs ?? []),
       "--timeout",
-      String(options.timeoutMs ?? 10_000),
+      String(options.timeoutMs ?? fixtureRunTimeoutMs),
       ...fixtureTests,
     ],
     cwd: fixtureRoot,
@@ -214,7 +231,11 @@ export const bunFixtureTest = (fixtureRoot: string, options: BunFixtureBeforeOpt
       callback: (context: { run: (runOptions?: BunFixtureRunOptions) => BunFixtureResult }) => void | Promise<void>,
       timeout?: number,
     ) {
-      return test(name, () => callback({ run: (runOptions) => runBunFixture(fixtureRoot, runOptions) }), timeout);
+      return test(
+        name,
+        () => callback({ run: (runOptions) => runBunFixture(fixtureRoot, runOptions) }),
+        timeout ?? fixtureRunTimeoutMs,
+      );
     },
   };
 };
