@@ -144,6 +144,19 @@ const createLazyExportHelper = () =>
     function __lazyExport(getValue, component) {
       let value;
       let resolved = false;
+      function __isObjectLike(candidate) {
+        return candidate !== null && (typeof candidate === "object" || typeof candidate === "function");
+      }
+      function __isMockFunction(candidate) {
+        // bun:test mocks expose ".mock"; the same getter throws on a plain
+        // function, hence the try/catch.
+        try {
+          const state = candidate.mock;
+          return state !== null && typeof state === "object" && Array.isArray(state.calls);
+        } catch {
+          return false;
+        }
+      }
       function resolve() {
         if (!resolved) {
           value = getValue();
@@ -180,11 +193,54 @@ const createLazyExportHelper = () =>
             return () => value;
           }
           const propertyValue = Reflect.get(value, property, value);
-          return typeof propertyValue === "function" ? propertyValue.bind(value) : propertyValue;
+          // Hand a test-runner mock back untouched: a bound copy is no longer
+          // a Mock, so expect(Linking.openURL).toHaveBeenCalled() after a
+          // spyOn rejects it and spy === Linking.openURL is false.
+          return typeof propertyValue === "function" && !__isMockFunction(propertyValue)
+            ? propertyValue.bind(value)
+            : propertyValue;
         },
         set(_target, property, nextValue) {
           resolve()[property] = nextValue;
           return true;
+        },
+        // Forward the reflective traps to the real export as well. Without
+        // them jest.spyOn(Linking, "openURL") reads the descriptor from the
+        // dummy target, installs the spy on that dummy, and the app keeps
+        // calling the original: the spy never records a call. The dummy is a
+        // function, so its non-configurable "prototype" has to keep being
+        // reported (Proxy invariant) even though the real export lacks it.
+        defineProperty(target, property, descriptor) {
+          const value = resolve();
+          return __isObjectLike(value)
+            ? Reflect.defineProperty(value, property, descriptor)
+            : Reflect.defineProperty(target, property, descriptor);
+        },
+        deleteProperty(target, property) {
+          const value = resolve();
+          return __isObjectLike(value)
+            ? Reflect.deleteProperty(value, property)
+            : Reflect.deleteProperty(target, property);
+        },
+        getOwnPropertyDescriptor(target, property) {
+          const targetDescriptor = Reflect.getOwnPropertyDescriptor(target, property);
+          if (targetDescriptor && !targetDescriptor.configurable) return targetDescriptor;
+          const value = resolve();
+          const descriptor = __isObjectLike(value) ? Reflect.getOwnPropertyDescriptor(value, property) : undefined;
+          return descriptor === undefined ? targetDescriptor : { ...descriptor, configurable: true };
+        },
+        has(target, property) {
+          const value = resolve();
+          return (__isObjectLike(value) && Reflect.has(value, property)) || Reflect.has(target, property);
+        },
+        ownKeys(target) {
+          const value = resolve();
+          const keys = __isObjectLike(value) ? Reflect.ownKeys(value) : [];
+          for (const key of Reflect.ownKeys(target)) {
+            const descriptor = Reflect.getOwnPropertyDescriptor(target, key);
+            if (descriptor && !descriptor.configurable && !keys.includes(key)) keys.push(key);
+          }
+          return keys;
         },
         apply(_target, thisArg, args) {
           const value = resolve();

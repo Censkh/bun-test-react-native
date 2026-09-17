@@ -4,10 +4,12 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import type { BunPlugin } from "bun";
 import { normalizeResolverOptions, resolveReactNativeImport, toFilePath } from "./platformResolver";
+import { projectRequire } from "./ProjectRequire";
 import {
   addRelativeSpecifierRewrite,
   getJavaScriptLoader,
   getReactNativeTransformations,
+  getRelativeSpecifiers,
   transpile,
 } from "./transpile";
 
@@ -34,7 +36,7 @@ const REACT_NATIVE_ASSET_FILE_PATTERN = /\.(?:bmp|gif|jpg|jpeg|m4a|mp3|mp4|otf|p
 const NORMAL_SOURCE_FILE_PATTERN =
   /^(?!.*[/\\]node_modules[/\\](?!@expo[/\\]|@react-native[/\\]|expo(?:[/\\]|-|$)|react-native(?!-gesture-handler(?:[/\\]|$))(?:[/\\]|-|$))).*\.[cm]?[jt]sx?$/;
 const NODE_MODULES_SEGMENT = `${path.sep}node_modules${path.sep}`;
-const TRANSFORM_CACHE_VERSION = "14";
+const TRANSFORM_CACHE_VERSION = "15";
 const identifierPattern = /^[A-Za-z_$][\w$]*$/;
 
 type PackageJson = {
@@ -119,6 +121,28 @@ const readJsonFile = <T>(filePath: string): T | null => {
   }
 };
 
+const readPackageVersion = (packageJsonPath: string | null) =>
+  (packageJsonPath && readJsonFile<PackageJson>(packageJsonPath)?.version) || "unknown";
+
+const resolveProjectPackageJson = (packageName: string) => {
+  try {
+    return projectRequire.resolve(`${packageName}/package.json`);
+  } catch {
+    return null;
+  }
+};
+
+// Everything that shapes a transform's output besides the source itself. Any of
+// these changing must miss the cache: a Bun upgrade changes what its loader
+// accepts, an SWC upgrade changes the emitted code, and a plugin upgrade (or a
+// patch to it) changes the transforms.
+const TOOLCHAIN_IDENTITY = {
+  bun: Bun.version,
+  cacheVersion: TRANSFORM_CACHE_VERSION,
+  plugin: readPackageVersion(path.join(import.meta.dir, "..", "package.json")),
+  swc: readPackageVersion(resolveProjectPackageJson("@swc/core")),
+};
+
 const nodeModulesPackageCache = new Map<string, NodeModulesPackageBase | null>();
 
 const getNodeModulesPackage = (filePath: string) => {
@@ -167,43 +191,102 @@ const getNodeModulesPackage = (filePath: string) => {
   };
 };
 
-const getNodeModulesTransformCachePath = (
+type TransformCacheEntry = { kind: "passthrough" } | { kind: "transformed"; contents: string };
+
+const PASSTHROUGH_MARKER_EXTENSION = ".same";
+
+// Directories whose listing decides how this file's relative specifiers resolve:
+// `./Foo` picks `Foo.ios.tsx` over `Foo.tsx` when the former exists, and the
+// transformed output embeds that choice as an absolute file URL. Adding or
+// removing a file bumps its directory's mtime, so the mtimes stand in for the
+// listings in the cache key.
+const getSpecifierDirectoryFingerprint = (
   filePath: string,
   source: string,
-  transformations: readonly string[],
-  options: ReturnType<typeof normalizeResolverOptions>,
+  loader: ReturnType<typeof getJavaScriptLoader>,
 ) => {
-  const packageInfo = getNodeModulesPackage(filePath);
-  if (!packageInfo) return null;
+  const fileDirectory = path.dirname(filePath);
+  const directories = new Set([fileDirectory]);
+  for (const specifier of getRelativeSpecifiers(source, loader)) {
+    directories.add(path.dirname(path.resolve(fileDirectory, getSpecifierPathname(specifier))));
+  }
 
-  const key = hashText(
-    JSON.stringify({
-      cacheVersion: TRANSFORM_CACHE_VERSION,
-      packageName: packageInfo.name,
-      packageVersion: packageInfo.version,
-      path: packageInfo.relativePath,
-      platform: options.platform,
-      sourceHash: hashText(source),
-      transforms: transformations,
-    }),
-  );
-
-  return path.join(packageInfo.cacheDirectory, `${key}.js`);
+  return [...directories].sort().map((directory) => {
+    try {
+      return [directory, fs.statSync(directory).mtimeMs] as const;
+    } catch {
+      return [directory, null] as const;
+    }
+  });
 };
 
-const readCachedTransform = (cachePath: string) => {
+// Where a file's transformed output is cached, and under which key. Files under
+// node_modules are keyed by package name and version plus their path inside the
+// package, since an install is what changes them. Project files are keyed by
+// their absolute path plus the fingerprint above.
+const getTransformCachePath = (
+  filePath: string,
+  source: string,
+  options: ReturnType<typeof normalizeResolverOptions>,
+  namespace = "file",
+) => {
+  const normalizedPath = path.resolve(toFilePath(filePath));
+  const packageInfo = getNodeModulesPackage(normalizedPath);
+  const key = hashText(
+    JSON.stringify(
+      packageInfo
+        ? {
+            ...TOOLCHAIN_IDENTITY,
+            namespace,
+            packageName: packageInfo.name,
+            packageVersion: packageInfo.version,
+            path: packageInfo.relativePath,
+            platform: options.platform,
+            sourceHash: hashText(source),
+          }
+        : {
+            ...TOOLCHAIN_IDENTITY,
+            directories: getSpecifierDirectoryFingerprint(normalizedPath, source, getJavaScriptLoader(normalizedPath)),
+            namespace,
+            path: normalizedPath,
+            platform: options.platform,
+            sourceHash: hashText(source),
+          },
+    ),
+  );
+  const directory = packageInfo
+    ? packageInfo.cacheDirectory
+    : path.join(options.projectRoot, "node_modules", ".btrn-cache", "project");
+
+  return path.join(directory, key);
+};
+
+const readCachedTransform = (cachePath: string): TransformCacheEntry | null => {
   try {
-    return fs.readFileSync(cachePath, "utf8");
+    return { kind: "transformed", contents: fs.readFileSync(`${cachePath}.js`, "utf8") };
+  } catch {}
+  try {
+    fs.statSync(`${cachePath}${PASSTHROUGH_MARKER_EXTENSION}`);
+    return { kind: "passthrough" };
   } catch {
     return null;
   }
 };
 
-const writeCachedTransform = (cachePath: string, contents: string) => {
+// Written to a temporary name and renamed into place so a worker that reads the
+// entry while another writes it sees either nothing or the whole file.
+const writeCachedTransform = (cachePath: string, entry: TransformCacheEntry) => {
+  const finalPath = entry.kind === "transformed" ? `${cachePath}.js` : `${cachePath}${PASSTHROUGH_MARKER_EXTENSION}`;
+  const temporaryPath = `${finalPath}.${process.pid}.tmp`;
   try {
-    fs.mkdirSync(path.dirname(cachePath), { recursive: true });
-    fs.writeFileSync(cachePath, contents);
-  } catch {}
+    fs.mkdirSync(path.dirname(finalPath), { recursive: true });
+    fs.writeFileSync(temporaryPath, entry.kind === "transformed" ? entry.contents : "");
+    fs.renameSync(temporaryPath, finalPath);
+  } catch {
+    try {
+      fs.rmSync(temporaryPath, { force: true });
+    } catch {}
+  }
 };
 
 const isCommonJsActualWrapperCandidate = (transformations: readonly string[]) =>
@@ -290,7 +373,23 @@ export const reactNativePlatformResolverPlugin: BunPlugin = {
       };
     });
 
+    // Bun runs this hook again for every `require()` a module executes at run
+    // time, and React Native requires lazily inside hot functions: a screen test
+    // resolves a few hundred distinct (importer, specifier) pairs some 17,000
+    // times. `resolveReactNativeImport` caches its own answer, but the work
+    // around it still costs ~25 µs a call, so the whole hook result is memoised.
+    const mainResolutions = new Map<string, { namespace?: string; path: string } | undefined>();
+
     build.onResolve({ filter: /./ }, (args) => {
+      const memoKey = `${args.importer ?? ""}\0${args.path}`;
+      if (mainResolutions.has(memoKey)) return mainResolutions.get(memoKey);
+
+      const result = resolveMainImport(args);
+      mainResolutions.set(memoKey, result);
+      return result;
+    });
+
+    const resolveMainImport = (args: ResolveDebugArgs) => {
       if (isNativeAddonSpecifier(args.path)) return undefined;
 
       const importer = args.importer ? normalizePluginImporter(args.importer) : undefined;
@@ -330,7 +429,7 @@ export const reactNativePlatformResolverPlugin: BunPlugin = {
       return {
         path: result.path,
       };
-    });
+    };
 
     build.onLoad({ filter: /.*/, namespace: "react-native-empty" }, (args) => {
       debug("onLoad empty", args.path);
@@ -349,7 +448,28 @@ export const reactNativePlatformResolverPlugin: BunPlugin = {
       const commonJsWrapper = isCommonJsActualWrapperCandidate(transformations)
         ? tryCreateCommonJsActualWrapper(filePath, source)
         : null;
-      const contents = commonJsWrapper ?? transpile({ source, filePath, options, transforms: runtimeTransforms });
+      if (commonJsWrapper) {
+        debug("onLoad actual", filePath);
+        return {
+          contents: commonJsWrapper,
+          loader,
+        };
+      }
+
+      // The wrapper above is built by evaluating the module, so only the plain
+      // transpile branch is cached.
+      const cachePath = getTransformCachePath(filePath, source, options, "actual");
+      const cached = readCachedTransform(cachePath);
+      if (cached?.kind === "transformed") {
+        debug("onLoad actual cache hit", filePath, { cachePath });
+        return {
+          contents: cached.contents,
+          loader,
+        };
+      }
+
+      const contents = transpile({ source, filePath, options, transforms: runtimeTransforms });
+      writeCachedTransform(cachePath, { kind: "transformed", contents });
 
       debug("onLoad actual", filePath);
       return {
@@ -362,8 +482,22 @@ export const reactNativePlatformResolverPlugin: BunPlugin = {
       const filePath = toFilePath(args.path);
       const loader = getJavaScriptLoader(filePath);
       const source = fs.readFileSync(filePath, "utf8");
+
+      // Looked up before working out which transformations apply: deciding that
+      // parses the source twice, and on a hit the answer is already in the entry.
+      const cachePath = getTransformCachePath(filePath, source, options);
+      const cached = readCachedTransform(cachePath);
+      if (cached !== null) {
+        debug("onLoad normal cache hit", filePath, { cachePath, kind: cached.kind });
+        return {
+          contents: cached.kind === "transformed" ? cached.contents : source,
+          loader,
+        };
+      }
+
       const transformations = getReactNativeTransformations(source, filePath, loader, options);
       if (transformations.length === 0) {
+        writeCachedTransform(cachePath, { kind: "passthrough" });
         return {
           contents: source,
           loader,
@@ -371,22 +505,8 @@ export const reactNativePlatformResolverPlugin: BunPlugin = {
       }
 
       debug("onLoad normal", filePath, { transformations });
-      const cachePath = getNodeModulesTransformCachePath(filePath, source, transformations, options);
-      if (cachePath) {
-        const cached = readCachedTransform(cachePath);
-        if (cached !== null) {
-          debug("onLoad normal cache hit", filePath, { cachePath, transformations });
-          return {
-            contents: cached,
-            loader,
-          };
-        }
-      }
-
       const contents = transpile({ source, filePath, options, transforms: transformations });
-      if (cachePath) {
-        writeCachedTransform(cachePath, contents);
-      }
+      writeCachedTransform(cachePath, { kind: "transformed", contents });
 
       return {
         contents,
