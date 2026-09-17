@@ -30,7 +30,7 @@ export {
   transpile,
 } from "./transpile";
 
-const REACT_NATIVE_ASSET_FILE_PATTERN = /\.(?:bmp|gif|jpg|jpeg|m4a|mp3|mp4|otf|png|psd|svg|ttf|webm|webp|wav)$/i;
+const REACT_NATIVE_ASSET_FILE_PATTERN = /\.(?:bmp|gif|jpg|jpeg|m4a|mp3|mp4|otf|png|psd|svg|ttf|webm|webp|wav|bin)$/i;
 const NORMAL_SOURCE_FILE_PATTERN =
   /^(?!.*[/\\]node_modules[/\\](?!@expo[/\\]|@react-native[/\\]|expo(?:[/\\]|-|$)|react-native(?!-gesture-handler(?:[/\\]|$))(?:[/\\]|-|$))).*\.[cm]?[jt]sx?$/;
 const NODE_MODULES_SEGMENT = `${path.sep}node_modules${path.sep}`;
