@@ -31,13 +31,14 @@ for (const { packageName, mockPath, exportsFrom } of officialMocks) {
     const requireActual = jestWithRequireActual.requireActual;
     jestWithRequireActual.requireActual = (moduleName) =>
       moduleName === packageName ? require(`actual:${packagePath}`) : requireActual(moduleName);
-    let loaded;
+    let loaded: Record<string, unknown>;
     try {
       loaded = require(`actual:${resolvedMockPath}`);
     } finally {
       jestWithRequireActual.requireActual = requireActual;
     }
-    const moduleMock: Record<string, unknown> = exportsFrom === "default" ? loaded.default : loaded;
+    const moduleMock: Record<string, unknown> =
+      exportsFrom === "default" ? (loaded.default as Record<string, unknown>) : loaded;
     return { ...moduleMock, default: moduleMock };
   });
 }

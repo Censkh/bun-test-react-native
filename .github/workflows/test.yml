@@ -53,7 +53,7 @@ jobs:
 
   install-react-native:
     name: Install React Native ${{ matrix.react_native }} fixtures
-    needs: install
+    needs: check
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -131,23 +131,14 @@ jobs:
       - name: Test React Native suite
         run: bun run test:react-native
 
-  expo:
-    name: Bun ${{ matrix.bun.name }} / Expo ${{ matrix.expo }}
-    needs: install
+  install-expo:
+    name: Install Expo ${{ matrix.expo }} fixtures
+    needs: check
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        bun:
-          - name: 1.3.x
-            version: "1.3.x"
-          - name: 1.4.x
-            version: "1.4.x"
-          - name: latest
-            version: latest
-          - name: canary
-            version: canary
-        expo:
+        expo: &expo_versions
           - latest
           - next
     steps:
@@ -163,48 +154,52 @@ jobs:
       - name: Unpack dependencies
         run: tar -xf node_modules.tar && rm node_modules.tar
 
-      - name: Set Expo fixture SDK
+      - name: Install fixtures
         env:
           EXPO_VERSION: ${{ matrix.expo }}
+        run: bun scripts/prepareExpoFixtures.ts
+
+      - name: Pack fixtures
+        run: tar -cf fixtures.tar tests/expo/fixtures
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: expo-fixtures-${{ matrix.expo }}
+          path: fixtures.tar
+          retention-days: 1
+
+  expo:
+    name: Bun ${{ matrix.bun.name }} / Expo ${{ matrix.expo }}
+    needs: install-expo
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        bun:
+          - name: 1.3.x
+            version: "1.3.x"
+          - name: 1.4.x
+            version: "1.4.x"
+          - name: latest
+            version: latest
+          - name: canary
+            version: canary
+        expo: *expo_versions
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: node_modules
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: expo-fixtures-${{ matrix.expo }}
+
+      - name: Unpack dependencies
         run: |
-          node <<'NODE'
-          const fs = require("node:fs");
-          const path = require("node:path");
-
-          const fixturesRoot = path.join("tests", "expo", "fixtures");
-          for (const fixtureName of fs.readdirSync(fixturesRoot)) {
-            const packageJsonPath = path.join(fixturesRoot, fixtureName, "package.json");
-            if (!fs.existsSync(packageJsonPath)) continue;
-
-            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
-            if (!packageJson.dependencies?.expo) continue;
-
-            packageJson.dependencies.expo = process.env.EXPO_VERSION;
-            fs.writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
-          }
-          NODE
-
-      - name: Install Expo fixture dependencies
-        run: |
-          for fixture in tests/expo/fixtures/*; do
-            if [ ! -f "$fixture/package.json" ]; then
-              continue
-            fi
-
-            has_expo=$(node -e 'const p=require("./'"$fixture"'/package.json"); process.stdout.write(p.dependencies?.expo ? "yes" : "no")')
-            if [ "$has_expo" != "yes" ]; then
-              continue
-            fi
-
-            (
-              cd "$fixture"
-              bun install --no-save
-              packages=$(node -e 'const dependencies = require("./package.json").dependencies ?? {}; const names = Object.keys(dependencies).filter((name) => name !== "expo" && (name === "jest-expo" || name === "react" || name === "react-native" || name.startsWith("expo-") || name.startsWith("@expo/") || name.startsWith("react-native-"))); process.stdout.write(names.join(" "));')
-              if [ -n "$packages" ]; then
-                bunx expo install $packages
-              fi
-            )
-          done
+          tar -xf node_modules.tar && rm node_modules.tar
+          tar -xf fixtures.tar && rm fixtures.tar
 
       - uses: oven-sh/setup-bun@v2
         with:
