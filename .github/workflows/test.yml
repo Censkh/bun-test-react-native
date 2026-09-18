@@ -25,7 +25,7 @@ jobs:
       - name: Pack dependencies
         run: tar -cf node_modules.tar node_modules
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: node_modules
           path: node_modules.tar
@@ -41,7 +41,7 @@ jobs:
         with:
           bun-version: latest
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: node_modules
 
@@ -70,7 +70,7 @@ jobs:
         with:
           bun-version: latest
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: node_modules
 
@@ -85,7 +85,7 @@ jobs:
       - name: Pack fixtures
         run: tar -cf fixtures.tar tests/react-native/fixtures
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: react-native-fixtures-${{ matrix.react_native }}
           path: fixtures.tar
@@ -111,11 +111,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: node_modules
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: react-native-fixtures-${{ matrix.react_native }}
 
@@ -147,7 +147,7 @@ jobs:
         with:
           bun-version: latest
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: node_modules
 
@@ -162,7 +162,7 @@ jobs:
       - name: Pack fixtures
         run: tar -cf fixtures.tar tests/expo/fixtures
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: expo-fixtures-${{ matrix.expo }}
           path: fixtures.tar
@@ -188,11 +188,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: node_modules
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: expo-fixtures-${{ matrix.expo }}
 
