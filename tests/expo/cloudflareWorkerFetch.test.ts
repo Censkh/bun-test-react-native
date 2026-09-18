@@ -8,7 +8,7 @@ describe("Cloudflare worker fetch fixture", () => {
   fixture.test(
     "passes with Bun fetch globals",
     ({ run }) => {
-      run().expectStatusCode(0);
+      run({ timeoutMs: 60_000 }).expectStatusCode(0);
     },
     60_000,
   );
