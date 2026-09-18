@@ -1,10 +1,10 @@
 import { describe } from "bun:test";
 import { bunFixtureTest, fixturePath } from "../fixtureRunner";
 
-const fixtureRoot = fixturePath(import.meta.dir, "lazy-export-runtime");
+const fixtureRoot = fixturePath(import.meta.dir, "react-native-netinfo");
 const fixture = bunFixtureTest(fixtureRoot);
 
-describe("lazy CommonJS export runtime fixture", () => {
+describe("@react-native-community/netinfo fixture", () => {
   fixture.test("passes in its own Bun test process", ({ run }) => {
     run().expectStatusCode(0);
   });

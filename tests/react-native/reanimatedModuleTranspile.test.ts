@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import fs from "node:fs";
 import { hasCjsDynamicExport, transpile } from "../../src/plugin";
 
 describe("CommonJS dynamic export detection", () => {
@@ -33,14 +32,6 @@ describe("CommonJS dynamic export detection", () => {
 
   test("detects module.exports default export assignments", () => {
     expect(hasCjsDynamicExport("module.exports = normalizeColor;")).toBe(true);
-  });
-
-  test("does not treat react-native-gesture-handler literal getter exports as dynamic", () => {
-    const gestureHandlerIndexPath = require.resolve("react-native-gesture-handler-2/lib/commonjs/index.js");
-    const source = fs.readFileSync(gestureHandlerIndexPath, "utf8");
-
-    expect(source).toContain('Object.defineProperty(exports, "GestureHandlerRootView"');
-    expect(hasCjsDynamicExport(source)).toBe(false);
   });
 });
 

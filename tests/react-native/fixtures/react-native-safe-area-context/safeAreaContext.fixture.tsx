@@ -18,9 +18,9 @@ const testMetrics = {
   insets: { bottom: 0, left: 0, right: 0, top: 0 },
 };
 
-describe("react-native-safe-area-context without package jest mock", () => {
-  test("loads without the package jest mock", () => {
-    expect(initialWindowMetrics).toBeNull();
+describe("react-native-safe-area-context with the package jest mock", () => {
+  test("loads the package jest mock", () => {
+    expect(initialWindowMetrics).toEqual(testMetrics);
     expect(SafeAreaProvider).toBeDefined();
     expect(SafeAreaView).toBeDefined();
   });

@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "dependencies": {
+    "react-native-gesture-handler": "2.31.2"
+  }
+}

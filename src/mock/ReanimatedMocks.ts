@@ -1,4 +1,6 @@
 import { jest, mock } from "bun:test";
+import fs from "node:fs";
+import path from "node:path";
 import { projectRequire } from "../ProjectRequire";
 
 const createReanimatedUseHandlerMock = () => ({
@@ -62,6 +64,39 @@ const normalizeReanimatedMock = (reanimated: Record<string, unknown>) => {
   };
 };
 
+// Reanimated's mock imports its real entry, which (from 4.6) registers a CSS event handler on the
+// module it picked. Under Jest that is JSReanimated, whose `setCSSEventHandler` throws, so make it a no-op.
+const JS_REANIMATED_PATHS = [
+  "src/ReanimatedModule/js-reanimated/JSReanimated.ts",
+  "lib/module/ReanimatedModule/js-reanimated/JSReanimated.js",
+];
+
+const installJSReanimatedPatch = (reanimatedPath: string) => {
+  let packageRoot: string;
+  try {
+    packageRoot = path.dirname(projectRequire.resolve("react-native-reanimated/package.json"));
+  } catch {
+    packageRoot = path.dirname(reanimatedPath);
+  }
+
+  for (const relativePath of JS_REANIMATED_PATHS) {
+    const jsReanimatedPath = path.join(packageRoot, relativePath);
+    if (!fs.existsSync(jsReanimatedPath)) continue;
+
+    mock.module(jsReanimatedPath, () => {
+      const actual = require(`actual:${jsReanimatedPath}`);
+      return {
+        ...actual,
+        createJSReanimatedModule: () => {
+          const reanimatedModule = actual.createJSReanimatedModule();
+          reanimatedModule.setCSSEventHandler = () => {};
+          return reanimatedModule;
+        },
+      };
+    });
+  }
+};
+
 const installReanimatedMocks = () => {
   let reanimatedPath: string;
   let reanimatedMockPath: string;
@@ -72,6 +107,7 @@ const installReanimatedMocks = () => {
     return;
   }
 
+  installJSReanimatedPatch(reanimatedPath);
   const createMock = () => normalizeReanimatedMock(require(`actual:${reanimatedMockPath}`));
   mock.module(reanimatedPath, createMock);
   mock.module(reanimatedMockPath, createMock);

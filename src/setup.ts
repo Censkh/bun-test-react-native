@@ -26,6 +26,7 @@ const installExpoGlobalStub = () => {
   expoGlobal.installOnUIRuntime ??= () => {};
 };
 
+require("./mock/JestGlobalsMocks");
 require("./mock/MiniflareWorkerdPatch");
 require("./mock/UndiciMocks");
 const nativeModules = require("./mock/NativeModules").default as Record<string, unknown>;
@@ -43,6 +44,7 @@ if (hasExpoRuntime) {
   installExpoGlobalStub();
 }
 require("./mock/ReactNativeMocks");
+require("./mock/WorkletsMocks");
 require("./mock/ReanimatedMocks");
 if (hasExpoRuntime) {
   require("./mock/ExpoWinterMocks");

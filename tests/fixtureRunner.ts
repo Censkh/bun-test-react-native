@@ -222,18 +222,51 @@ const runBunFixture = (fixtureRoot: string, options: BunFixtureRunOptions = {}) 
   return createBunFixtureResult(fixtureRoot, { durationMs, exitCode: result.exitCode, stderr, stdout });
 };
 
+/** The version of `packageName` installed in the fixture, or undefined if it is not installed. */
+export const fixturePackageVersion = (fixtureRoot: string, packageName: string): string | undefined => {
+  try {
+    const packageJsonPath = path.join(fixtureRoot, "node_modules", packageName, "package.json");
+    return JSON.parse(fs.readFileSync(packageJsonPath, "utf8")).version;
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * Whether the fixture's installed `packageName` satisfies `range`. Prereleases match as their release
+ * version (0.87.0-rc.1 satisfies ">=0.87.0"), matching `matrixDependencies` in the fixture install.
+ */
+export const fixturePackageSatisfies = (fixtureRoot: string, packageName: string, range: string) => {
+  const version = fixturePackageVersion(fixtureRoot, packageName);
+  return version !== undefined && Bun.semver.satisfies(version.replace(/-.*$/, ""), range);
+};
+
+type BunFixtureVersions = {
+  packageVersion(packageName: string): string | undefined;
+  satisfies(packageName: string, range: string): boolean;
+};
+
 export const bunFixtureTest = (fixtureRoot: string, options: BunFixtureBeforeOptions = {}) => {
   beforeBunFixture(fixtureRoot, options);
 
+  // Read lazily: fixtures may only be installed once the suite's beforeAll runs.
+  const versions: BunFixtureVersions = {
+    packageVersion: (packageName) => fixturePackageVersion(fixtureRoot, packageName),
+    satisfies: (packageName, range) => fixturePackageSatisfies(fixtureRoot, packageName, range),
+  };
+
   return {
+    ...versions,
     test(
       name: string,
-      callback: (context: { run: (runOptions?: BunFixtureRunOptions) => BunFixtureResult }) => void | Promise<void>,
+      callback: (
+        context: BunFixtureVersions & { run: (runOptions?: BunFixtureRunOptions) => BunFixtureResult },
+      ) => void | Promise<void>,
       timeout?: number,
     ) {
       return test(
         name,
-        () => callback({ run: (runOptions) => runBunFixture(fixtureRoot, runOptions) }),
+        () => callback({ ...versions, run: (runOptions) => runBunFixture(fixtureRoot, runOptions) }),
         timeout ?? fixtureRunTimeoutMs,
       );
     },

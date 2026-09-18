@@ -1,76 +1,43 @@
 import { jest, mock } from "bun:test";
 import { projectRequire } from "../ProjectRequire";
 
-const safeAreaInsets = { bottom: 0, left: 0, right: 0, top: 0 };
-const safeAreaFrame = { height: 640, width: 320, x: 0, y: 0 };
+type JestWithRequireActual = typeof jest & { requireActual: (moduleName: string) => unknown };
+const jestWithRequireActual = jest as JestWithRequireActual;
 
-const netInfoState = {
-  isConnected: true,
-  isInternetReachable: true,
-  type: "wifi",
-};
+// Community packages that ship their own Jest mock. Each is mocked only when the project installs it,
+// using the package's mock so behaviour tracks the installed version. Every version compatible with
+// the supported React Native range ships these mocks.
+const officialMocks = [
+  // Default export only, for `jest.mock(name, () => mock)`.
+  { packageName: "react-native-safe-area-context", mockPath: "jest/mock", exportsFrom: "default" },
+  // CommonJS object that is both the module and its default export.
+  { packageName: "@react-native-community/netinfo", mockPath: "jest/netinfo-mock.js", exportsFrom: "module" },
+] as const;
 
-const netInfoMock = {
-  addEventListener: jest.fn((listener?: (state: typeof netInfoState) => void) => {
-    listener?.(netInfoState);
-    return jest.fn();
-  }),
-  fetch: jest.fn(async () => netInfoState),
-};
+// The mocks are written for Jest and reach for the `jest` global.
+(globalThis as { jest?: unknown }).jest ??= jest;
 
-mock.module("@react-native-community/netinfo", () => ({
-  ...netInfoMock,
-  default: netInfoMock,
-}));
-
-const installSafeAreaContextMock = () => {
-  let safeAreaContextPath: string;
+for (const { packageName, mockPath, exportsFrom } of officialMocks) {
+  let packagePath: string;
+  let resolvedMockPath: string;
   try {
-    safeAreaContextPath = projectRequire.resolve("react-native-safe-area-context");
+    packagePath = projectRequire.resolve(packageName);
+    resolvedMockPath = projectRequire.resolve(`${packageName}/${mockPath}`);
   } catch {
-    return;
+    continue;
   }
 
-  const React = projectRequire("react") as typeof import("react");
-  const { View } = projectRequire("react-native") as typeof import("react-native");
-  const SafeAreaInsetsContext = React.createContext<typeof safeAreaInsets | null>(null);
-  const SafeAreaFrameContext = React.createContext<typeof safeAreaFrame | null>(null);
-
-  mock.module(safeAreaContextPath, () => ({
-    SafeAreaConsumer: SafeAreaInsetsContext.Consumer,
-    SafeAreaContext: SafeAreaInsetsContext,
-    SafeAreaFrameContext,
-    SafeAreaInsetsContext,
-    SafeAreaProvider: ({
-      children,
-      initialMetrics,
-    }: {
-      children: React.ReactNode;
-      initialMetrics?: { frame?: typeof safeAreaFrame; insets?: typeof safeAreaInsets };
-    }) =>
-      React.createElement(
-        SafeAreaFrameContext.Provider,
-        { value: initialMetrics?.frame ?? safeAreaFrame },
-        React.createElement(
-          SafeAreaInsetsContext.Provider,
-          { value: initialMetrics?.insets ?? safeAreaInsets },
-          children,
-        ),
-      ),
-    SafeAreaView: View,
-    initialWindowMetrics: null,
-    initialWindowSafeAreaInsets: safeAreaInsets,
-    useSafeArea: () => React.useContext(SafeAreaInsetsContext) ?? safeAreaInsets,
-    useSafeAreaFrame: () => React.useContext(SafeAreaFrameContext) ?? safeAreaFrame,
-    useSafeAreaInsets: () => React.useContext(SafeAreaInsetsContext) ?? safeAreaInsets,
-    withSafeAreaInsets: <Props extends object>(Component: React.ComponentType<Props>) =>
-      function WithSafeAreaInsets(props: Props) {
-        return React.createElement(Component, {
-          ...props,
-          insets: React.useContext(SafeAreaInsetsContext) ?? safeAreaInsets,
-        } as Props);
-      },
-  }));
-};
-
-installSafeAreaContextMock();
+  mock.module(packagePath, () => {
+    const requireActual = jestWithRequireActual.requireActual;
+    jestWithRequireActual.requireActual = (moduleName) =>
+      moduleName === packageName ? require(`actual:${packagePath}`) : requireActual(moduleName);
+    let loaded;
+    try {
+      loaded = require(`actual:${resolvedMockPath}`);
+    } finally {
+      jestWithRequireActual.requireActual = requireActual;
+    }
+    const moduleMock: Record<string, unknown> = exportsFrom === "default" ? loaded.default : loaded;
+    return { ...moduleMock, default: moduleMock };
+  });
+}

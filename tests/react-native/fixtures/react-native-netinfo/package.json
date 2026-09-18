@@ -1,7 +1,7 @@
 {
-  "name": "react-native-runtime-085-fixture",
   "type": "module",
   "dependencies": {
+    "@react-native-community/netinfo": "12.0.1",
     "react": "19.2.3",
     "react-native": "0.85.3"
   }
