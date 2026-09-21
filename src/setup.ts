@@ -15,7 +15,9 @@ const installExpoGlobalStub = () => {
   const expoGlobal = ((globalThis as any).expo ??= {});
   expoGlobal.EventEmitter ??= class EventEmitter {};
   expoGlobal.NativeModule ??= class NativeModule {};
-  expoGlobal.SharedObject ??= class SharedObject {};
+  expoGlobal.SharedObject ??= class SharedObject {
+    release() {}
+  };
   expoGlobal.SharedRef ??= class SharedRef {};
   expoGlobal.modules ??= {};
   expoGlobal.getViewConfig ??= () => ({

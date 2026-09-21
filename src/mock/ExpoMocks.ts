@@ -86,6 +86,32 @@ mock.module("expo-image", () => {
   return { __esModule: true, Image, default: Image };
 });
 
+mock.module("expo-image-manipulator", () => {
+  const rendered = {
+    height: 1,
+    release: jest.fn(),
+    saveAsync: jest.fn(async () => ({ height: 1, uri: "file:///manipulated.jpg", width: 1 })),
+    width: 1,
+  };
+  const manipulate = jest.fn(() => {
+    const context = {
+      crop: jest.fn(() => context),
+      flip: jest.fn(() => context),
+      release: jest.fn(),
+      renderAsync: jest.fn(async () => rendered),
+      resize: jest.fn(() => context),
+      rotate: jest.fn(() => context),
+    };
+    return context;
+  });
+  return {
+    __esModule: true,
+    FlipType: { Horizontal: "horizontal", Vertical: "vertical" },
+    ImageManipulator: { manipulate },
+    SaveFormat: { JPEG: "jpeg", PNG: "png", WEBP: "webp" },
+  };
+});
+
 if (!mockNativeModules.LinkingManager) {
   Object.defineProperty(mockNativeModules, "LinkingManager", {
     configurable: true,
