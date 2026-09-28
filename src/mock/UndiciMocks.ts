@@ -1,4 +1,10 @@
 import { mock } from "bun:test";
+import { Readable } from "node:stream";
+
+const streamConstructor = ReadableStream as typeof ReadableStream & {
+  from?: (iterable: Iterable<unknown> | AsyncIterable<unknown>) => ReadableStream;
+};
+streamConstructor.from ??= (iterable) => Readable.toWeb(Readable.from(iterable)) as unknown as ReadableStream;
 
 const workerThreads = require("node:worker_threads");
 

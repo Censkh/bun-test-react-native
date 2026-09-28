@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
+import { URL as NodeURL } from "node:url";
 import { Api, FetchRequestBackend } from "api-def";
 import { Request as UndiciRequest } from "undici";
 import { createTestHarness } from "wrangler";
@@ -114,6 +115,7 @@ describe("Cloudflare worker fetch", () => {
 
   test("createTestHarness getWorker fetch still routes after Expo Winter installs globals", async () => {
     await import("expo/src/winter");
+    expect(URL).toBe(NodeURL);
 
     const server = createTestHarness({
       workers: [{ configPath: path.join(import.meta.dir, "wrangler.toml") }],

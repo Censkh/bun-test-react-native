@@ -360,6 +360,10 @@ export const reactNativePlatformResolverPlugin: BunPlugin = {
 
     build.onLoad({ filter: NORMAL_SOURCE_FILE_PATTERN }, (args) => {
       const filePath = toFilePath(args.path);
+      // Expo loads this file by relative require, bypassing the module mock in ExpoWinterMocks.
+      if (filePath.replaceAll("\\", "/").endsWith("/expo/src/winter/url.ts")) {
+        return { contents: 'export { URL, URLSearchParams } from "node:url";', loader: "js" };
+      }
       const loader = getJavaScriptLoader(filePath);
       const source = fs.readFileSync(filePath, "utf8");
       const transformations = getReactNativeTransformations(source, filePath, loader, options);
