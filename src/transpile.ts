@@ -150,6 +150,22 @@ export const hasExtensionlessPlatformSpecifier = (source: string, loader: JavaSc
   }
 };
 
+// The relative specifiers a module imports or requires, for callers that need to
+// know which directories its resolution depends on. Empty when the source has no
+// relative specifier at all, or when it does not parse.
+export const getRelativeSpecifiers = (source: string, loader: JavaScriptLoader): string[] => {
+  if (!source.includes("./") && !source.includes("../")) return [];
+
+  try {
+    return getTranspiler(loader)
+      .scanImports(source)
+      .map((importRecord) => importRecord.path)
+      .filter((specifier) => isRelativeSpecifier(specifier));
+  } catch {
+    return [];
+  }
+};
+
 const hasRelativeModuleSpecifier = (source: string, loader: JavaScriptLoader) => {
   if (!source.includes("./") && !source.includes("../") && !source.includes("react-native/src/")) return false;
 

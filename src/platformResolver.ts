@@ -58,17 +58,62 @@ export const isReactNativeNativeModulesPath = (filePath: string) =>
     toFilePath(filePath),
   );
 
-const fileExists = (filePath: string) => {
+type DirectoryEntryKind = "directory" | "file" | "symlink";
+
+const NODE_MODULES_PATH_PATTERN = /[/\\]node_modules[/\\]/;
+const nodeModulesListings = new Map<string, Map<string, DirectoryEntryKind> | null>();
+
+// Resolving `./Foo` probes up to fifteen candidates (`Foo.ios.tsx`, `Foo.native.js`,
+// ...) with one stat each, and a barrel like lucide-react-native's imports ~1,800
+// sibling modules: ~280,000 failed stats for one screen test. Under node_modules
+// nothing changes during a run, so one readdir per directory answers every probe
+// into it. Symlinks (workspace packages) still go through stat, which follows them.
+const getNodeModulesListing = (directory: string) => {
+  const cached = nodeModulesListings.get(directory);
+  if (cached !== undefined) return cached;
+
+  let listing: Map<string, DirectoryEntryKind> | null = null;
   try {
-    return fs.statSync(toFilePath(filePath)).isFile();
+    listing = new Map(
+      fs
+        .readdirSync(directory, { withFileTypes: true })
+        .map((entry) => [
+          entry.name,
+          entry.isSymbolicLink() ? "symlink" : entry.isDirectory() ? "directory" : "file",
+        ]),
+    );
+  } catch {}
+  nodeModulesListings.set(directory, listing);
+  return listing;
+};
+
+const getNodeModulesEntryKind = (filePath: string) => {
+  if (!NODE_MODULES_PATH_PATTERN.test(filePath)) return undefined;
+  const listing = getNodeModulesListing(path.dirname(filePath));
+  if (!listing) return undefined;
+  const kind = listing.get(path.basename(filePath));
+  return kind === "symlink" ? undefined : (kind ?? "missing");
+};
+
+const fileExists = (filePath: string) => {
+  const normalizedPath = toFilePath(filePath);
+  const kind = getNodeModulesEntryKind(normalizedPath);
+  if (kind !== undefined) return kind === "file";
+
+  try {
+    return fs.statSync(normalizedPath).isFile();
   } catch {
     return false;
   }
 };
 
 const directoryExists = (directoryPath: string) => {
+  const normalizedPath = toFilePath(directoryPath);
+  const kind = getNodeModulesEntryKind(normalizedPath);
+  if (kind !== undefined) return kind === "directory";
+
   try {
-    return fs.statSync(toFilePath(directoryPath)).isDirectory();
+    return fs.statSync(normalizedPath).isDirectory();
   } catch {
     return false;
   }
@@ -230,11 +275,25 @@ const findWorkspaceRoot = (startDirectory: string) => {
   }
 };
 
+// `projectRequire.resolve` goes through Bun's resolver, and Bun runs the plugin's
+// `onResolve` hooks for that lookup too. Left alone, the hook re-enters this
+// resolver for the same specifier before its result is cached, and the recursion
+// only stops when the stack overflows: ~1200 frames and ~70 ms per package
+// subpath, paid again on every test file and every worker. While a lookup is in
+// flight the plugin steps aside and Bun resolves with its own algorithm, which is
+// what the lookup is for.
+let packageExportsLookupsInFlight = 0;
+
+export const isPackageExportsLookupInFlight = () => packageExportsLookupsInFlight > 0;
+
 const resolvePackageExports = (specifier: string, importerDirectory: string) => {
+  packageExportsLookupsInFlight += 1;
   try {
     return projectRequire.resolve(specifier, { paths: [importerDirectory] });
   } catch {
     return null;
+  } finally {
+    packageExportsLookupsInFlight -= 1;
   }
 };
 
@@ -273,6 +332,7 @@ export const resolveReactNativeImport = (
   if (resolveResultCache.has(cacheKey)) {
     return resolveResultCache.get(cacheKey) ?? null;
   }
+  if (isPackageExportsLookupInFlight()) return null;
 
   const cacheResult = (result: ResolveResult) => {
     resolveResultCache.set(cacheKey, result);

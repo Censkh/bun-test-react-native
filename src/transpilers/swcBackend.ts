@@ -36,6 +36,16 @@ export const swcBackend: TranspileBackend = {
                   react: {
                     runtime: "automatic",
                   },
+                  // Flow only: match Babel's `flow-strip-types`, which drops a
+                  // type-only field like `state: State;` instead of emitting a
+                  // real class field. With define semantics that field runs
+                  // `Object.defineProperty(this, "state", ...)` after `super()`
+                  // and throws inside `VirtualizedList`, whose parent
+                  // (`StateSafePureComponent`) already defined `state` as a
+                  // non-configurable accessor: every FlatList render fails with
+                  // "Attempting to change configurable attribute of
+                  // unconfigurable property".
+                  ...(options.transforms.includes("flow") ? { useDefineForClassFields: false } : {}),
                 },
               }
             : {}),
