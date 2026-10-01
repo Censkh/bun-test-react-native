@@ -30,8 +30,15 @@ export const createExpoUIViewMock = (displayName: string) => {
   const textPropNames = textPropsByViewName[viewName] ?? [];
   const reactNodePropNames = reactNodePropsByViewName[viewName] ?? [];
 
-  const component = ({ children, ...props }) =>
-    React.createElement(
+  const component = ({ children, ...props }) => {
+    if (viewName === "ModalBottomSheet") {
+      React.useImperativeHandle(props.ref, () => ({
+        hide: async () => {},
+        expand: async () => {},
+        partialExpand: async () => {},
+      }));
+    }
+    return React.createElement(
       React.Fragment,
       null,
       React.createElement(displayName, props, children),
@@ -44,6 +51,7 @@ export const createExpoUIViewMock = (displayName: string) => {
       ),
       ...reactNodePropNames.map((propName) => props[propName]).filter((value) => React.isValidElement(value)),
     );
+  };
 
   Object.defineProperty(component, "displayName", {
     configurable: true,
