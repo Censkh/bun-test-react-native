@@ -8,17 +8,19 @@ import { getReactNativeTransformations, transpile } from "../../../../src/plugin
 
 describe("expo-router", () => {
   test("renders an in-memory router with renderRouter", async () => {
-    const result = renderRouter({
+    const rendered = renderRouter({
       index: () => React.createElement(React.Fragment),
       profile: () => React.createElement(React.Fragment),
     });
+    // Older routers attach route helpers to the renderer's Promise rather than its resolved result.
+    const result = Object.assign(await rendered, rendered);
 
     expect(result.getPathname()).toBe("/");
     expect(result.getSegments()).toEqual([]);
   });
 
-  test("renders NativeTabs layouts in the test runtime", () => {
-    const result = renderRouter({
+  test("renders NativeTabs layouts in the test runtime", async () => {
+    const rendered = renderRouter({
       _layout: () =>
         React.createElement(
           NativeTabs,
@@ -29,6 +31,7 @@ describe("expo-router", () => {
       index: () => React.createElement(Text, null, "Home"),
       create: () => React.createElement(Text, null, "Create"),
     });
+    const result = Object.assign(await rendered, rendered);
 
     expect(result.getPathname()).toBe("/");
   });
