@@ -25,6 +25,7 @@ const authMock = {
       credential,
     },
   })),
+  signInWithCustomToken: jest.fn(),
   signInWithEmailLink: jest.fn(),
   signOut: jest.fn(),
 };

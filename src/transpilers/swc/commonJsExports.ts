@@ -180,7 +180,13 @@ const createLazyExportHelper = () =>
             return () => value;
           }
           const propertyValue = Reflect.get(value, property, value);
-          return typeof propertyValue === "function" ? propertyValue.bind(value) : propertyValue;
+          // Methods keep their receiver, but components and classes (capitalized by convention,
+          // e.g. Stack.Toolbar.MenuAction) must keep their identity: libraries compare child
+          // element types against them.
+          const isComponentLike = typeof property === "string" && /^[A-Z]/.test(property);
+          return typeof propertyValue === "function" && !isComponentLike
+            ? propertyValue.bind(value)
+            : propertyValue;
         },
         set(_target, property, nextValue) {
           resolve()[property] = nextValue;
